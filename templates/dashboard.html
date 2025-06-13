@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Calendar AI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Welcome, {{ current_user.username }}!</h1>
+                    <p class="text-muted">Extract events from text and sync to your Google Calendar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Text Input Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="input-card">
+                <h3 class="mb-3">
+                    <i data-feather="edit-3" class="me-2"></i>
+                    Extract Events from Text
+                </h3>
+                
+                <form method="POST" action="{{ url_for('main_routes.extract_events') }}">
+                    <div class="mb-3">
+                        <label for="text" class="form-label">Paste your email, document, or any text with event information:</label>
+                        <textarea class="form-control text-input" 
+                                  id="text" 
+                                  name="text" 
+                                  rows="8" 
+                                  placeholder="Example:&#10;&#10;Subject: Team Meeting Tomorrow&#10;From: manager@company.com&#10;&#10;Hi team, we have our weekly meeting tomorrow at 2 PM in Conference Room A..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-accent btn-lg">
+                        <i data-feather="cpu" class="me-2"></i>
+                        Extract Events
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Your Events</h2>
+                <span class="badge bg-primary">{{ events|length }} event(s)</span>
+            </div>
+            
+            {% if events %}
+                <div class="events-container">
+                    {% for event in events %}
+                        <div class="event-card">
+                            <div class="event-header">
+                                <div class="event-title">
+                                    <h4>{{ event.event_name }}</h4>
+                                    {% if event.is_synced %}
+                                        <span class="badge bg-success ms-2">
+                                            <i data-feather="check" class="small-icon"></i>
+                                            Synced
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-2">Not Synced</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="event-actions">
+                                    <a href="{{ url_for('main_routes.edit_event', event_id=event.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i data-feather="edit-2"></i>
+                                    </a>
+                                    
+                                    {% if not event.is_synced %}
+                                        <form method="POST" action="{{ url_for('main_routes.sync_to_calendar', event_id=event.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-accent" title="Sync to Google Calendar">
+                                                <i data-feather="calendar"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    
+                                    <form method="POST" action="{{ url_for('main_routes.delete_event', event_id=event.id) }}" 
+                                          class="d-inline" 
+                                          onsubmit="return confirm('Are you sure you want to delete this event?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete event">
+                                            <i data-feather="trash-2"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="event-details">
+                                {% if event.event_description %}
+                                    <p class="event-description">{{ event.event_description }}</p>
+                                {% endif %}
+                                
+                                <div class="event-meta">
+                                    <div class="meta-item">
+                                        <i data-feather="calendar" class="me-1"></i>
+                                        <strong>Date:</strong> {{ event.start_date.strftime('%B %d, %Y') }}
+                                        {% if event.end_date and event.end_date != event.start_date %}
+                                            - {{ event.end_date.strftime('%B %d, %Y') }}
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if event.start_time %}
+                                        <div class="meta-item">
+                                            <i data-feather="clock" class="me-1"></i>
+                                            <strong>Time:</strong> {{ event.start_time.strftime('%I:%M %p') }}
+                                            {% if event.end_time %}
+                                                - {{ event.end_time.strftime('%I:%M %p') }}
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if event.location %}
+                                        <div class="meta-item">
+                                            <i data-feather="map-pin" class="me-1"></i>
+                                            <strong>Location:</strong> {{ event.location }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="text-center">
+                        <i data-feather="calendar" class="empty-icon"></i>
+                        <h3>No Events Yet</h3>
+                        <p class="text-muted">Extract events from text above to get started!</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar AI - Transform Text to Events{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="hero-title">Transform Text into Calendar Events</h1>
+                <p class="hero-subtitle">
+                    Paste your emails, documents, or any text containing dates and events. 
+                    Our AI will extract calendar events and sync them to your Google Calendar.
+                </p>
+                
+                {% if not current_user.is_authenticated %}
+                    <div class="hero-actions mt-4">
+                        <a href="{{ url_for('google_auth.login') }}" class="btn btn-primary btn-lg">
+                            <i data-feather="calendar" class="me-2"></i>
+                            Get Started with Google
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="hero-actions mt-4">
+                        <a href="{{ url_for('main_routes.dashboard') }}" class="btn btn-primary btn-lg">
+                            <i data-feather="grid" class="me-2"></i>
+                            Go to Dashboard
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2>How It Works</h2>
+                <p class="text-muted">Simple, fast, and intelligent event extraction</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-feather="edit-3"></i>
+                    </div>
+                    <h4>Paste Your Text</h4>
+                    <p>Copy and paste emails, documents, or any text containing event information into our text area.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-feather="cpu"></i>
+                    </div>
+                    <h4>AI Extraction</h4>
+                    <p>Our advanced AI analyzes your text and extracts event details like dates, times, locations, and descriptions.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i data-feather="calendar"></i>
+                    </div>
+                    <h4>Sync to Calendar</h4>
+                    <p>Review extracted events, make edits if needed, and sync them directly to your Google Calendar.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="example-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="example-card">
+                    <h3 class="mb-4">Example Input</h3>
+                    <div class="example-text">
+                        <code>
+Subject: Team Meeting Tomorrow<br>
+From: manager@company.com<br><br>
+
+Hi team,<br><br>
+
+Just a reminder that we have our weekly team meeting tomorrow (March 15th) at 2:00 PM in Conference Room A. We'll be discussing the Q1 results and planning for Q2.<br><br>
+
+Also, don't forget about the company retreat next Friday, March 22nd from 9:00 AM to 5:00 PM at Mountain View Resort.<br><br>
+
+Thanks!
+                        </code>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>AI Will Extract:</h5>
+                        <ul class="list-unstyled">
+                            <li><i data-feather="check-circle" class="text-success me-2"></i> Team Meeting (from manager@company.com) - March 15, 2:00 PM</li>
+                            <li><i data-feather="check-circle" class="text-success me-2"></i> Company Retreat - March 22, 9:00 AM - 5:00 PM at Mountain View Resort</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
