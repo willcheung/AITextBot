@@ -1,0 +1,31 @@
+create a backend API service that transforms text into calendar events. It takes some text, either from email or document, and extracts date information from them. Text can be a travel itinerary, school event, or any date/time related events. From the extracted data, integrate with Google calendar and create corresponding events. For frontend, use any popular framework. 
+A sample prompt I would feed into this API would be:
+Given the following text, extract all event information. For each event, identify:
+The event name. 
+The event description that gives context to this calendar event.
+The start date (in YYYY-MM-DD format).
+The start time (in HH:MM 24-hour format, if specified).
+The end date (in YYYY-MM-DD format, if specified or different from start date).
+The end time (in HH:MM 24-hour format, if specified).
+The location (if specified).
+If a date is relative (e.g., "next Monday," "tomorrow"), assume the current date is [INSERT CURRENT DATE HERE, e.g., 2023-10-27] for resolving it.
+Provide the output as a JSON list, where each object in the list represents an event with keys: "event_description", "start_date", "start_time", "end_date", "end_time", "location". If a piece of information is not found, use null or an empty string for its value.
+Text: """ [PASTE THE EMAIL/DOCUMENT TEXT HERE] """
+Core Features of this service:
+Google authentication: Integrate Google authentication and ask user for access to read/write calendar. Make sure the token is automatically refreshed.
+Database: Use a suitable database to store user email, name, and other relevant information (after they're authenticated), user events, text input from users, and extracted metadata from the text.
+Event Extraction: Text Analysis and Event Extraction: Uses AI to extract event details from user-provided text (emails, documents, etc.) following the prompt precisely. LLM uses a tool to resolve ambiguities in the date, time and location information. If input is an email, extract "from" email address and append that to the subject of the event.
+Event Display: Event Card Display: Display extracted event details in a clear card format, showing event name, description, date, time and location. All events are saved in the database tied to the user, and users can see all the Event Cards if they login.
+Edit Details: Manual Override: Allows users to manually adjust any incorrectly extracted event information.
+Calendar Integration: Integration with Google Calendar: Seamlessly create events in Google Calendar using extracted data.
+Text Input on Web interface: Text Input Area: Provides a straightforward text input field for pasting email/document text.
+Alternative input: A service that listens to incoming emails and extracts the text from the email. When an email is received, look up if email address/user exists. If user exists, use the user's authentication to create calendar event. If it doesn't exist, send user an email on the extracted calendar event and asks user to sign in to save the event.
+Style Guidelines:
+Primary color: Deep blue (#3F51B5) for a calm, professional feel.
+Background color: Very light grey (#F0F2F5) to provide a neutral backdrop.
+Accent color: Vibrant orange (#FF9800) to highlight key actions and interactive elements.
+Body and headline font: 'Inter' sans-serif for clear readability and modern appeal.
+Code font: 'Source Code Pro' for displaying code snippets or technical info if necessary.
+Use simple, clear icons from a consistent set to represent event types, actions, and categories.
+Cards arrange extracted events neatly in a vertically stacked format. Use infinite scrolling if there are more events to be displayed as users scroll.
+Subtle transitions for loading new information and opening event detail.
