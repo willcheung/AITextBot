@@ -22,8 +22,8 @@ def index():
 @main_routes.route("/dashboard")
 @login_required
 def dashboard():
-    # Get user's events ordered by extraction datetime (most recent first)
-    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.extracted_at.desc()).all()
+    # Get user's events ordered by extraction datetime (oldest first)
+    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.extracted_at.asc()).all()
     text_inputs = TextInput.query.filter_by(user_id=current_user.id).order_by(TextInput.created_at.desc()).limit(10).all()
     
     return render_template("dashboard.html", events=events, text_inputs=text_inputs)
