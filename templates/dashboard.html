@@ -122,6 +122,11 @@
                                             <strong>Location:&nbsp;</strong> {{ event.location }}
                                         </div>
                                     {% endif %}
+                                    
+                                    <div class="meta-item text-muted">
+                                        <i data-feather="plus-circle" class="me-1"></i>
+                                        <strong>Extracted:&nbsp;</strong> {{ event.extracted_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
