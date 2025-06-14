@@ -8,6 +8,9 @@ import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
+# Simple cache for Textbot calendar ID to avoid repeated creation
+_textbot_calendar_cache = {}
+
 def refresh_google_token(user):
     """
     Refresh Google OAuth token if needed.
@@ -37,6 +40,12 @@ def get_or_create_textbot_calendar(access_token):
     Returns:
         str: Calendar ID for the Textbot calendar
     """
+    # Check cache first
+    cache_key = access_token[:20]  # Use first 20 chars as cache key
+    if cache_key in _textbot_calendar_cache:
+        logger.info(f"Using cached Textbot calendar ID: {_textbot_calendar_cache[cache_key]}")
+        return _textbot_calendar_cache[cache_key]
+    
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
@@ -57,6 +66,7 @@ def get_or_create_textbot_calendar(access_token):
                 if calendar.get('summary') == 'Textbot':
                     calendar_id = calendar.get('id')
                     logger.info(f"Found existing Textbot calendar with ID: {calendar_id}")
+                    _textbot_calendar_cache[cache_key] = calendar_id
                     return calendar_id
         
         # If Textbot calendar doesn't exist, create it
@@ -78,6 +88,7 @@ def get_or_create_textbot_calendar(access_token):
             result = response.json()
             calendar_id = result.get('id')
             logger.info(f"Successfully created Textbot calendar with ID: {calendar_id}")
+            _textbot_calendar_cache[cache_key] = calendar_id
             return calendar_id
         else:
             logger.error(f"Failed to create Textbot calendar: {response.status_code} - {response.text}")

@@ -22,8 +22,8 @@ def index():
 @main_routes.route("/dashboard")
 @login_required
 def dashboard():
-    # Get user's events ordered by date
-    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.start_date.desc(), Event.start_time.desc()).all()
+    # Get user's events ordered by extraction datetime (most recent first)
+    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.extracted_at.desc()).all()
     text_inputs = TextInput.query.filter_by(user_id=current_user.id).order_by(TextInput.created_at.desc()).limit(10).all()
     
     return render_template("dashboard.html", events=events, text_inputs=text_inputs)
@@ -86,6 +86,7 @@ def extract_events():
                 text_input.processing_status = "completed"
             
             # Create Event records for each extracted event
+            extraction_time = datetime.utcnow()
             created_events = []
             for event_data in extracted_events:
                 try:
@@ -97,6 +98,7 @@ def extract_events():
                         event.text_input_id = text_input.id
                     event.event_name = cleaned_event['event_name']
                     event.event_description = cleaned_event['event_description']
+                    event.extracted_at = extraction_time
                     
                     # Parse dates safely
                     if cleaned_event['start_date']:

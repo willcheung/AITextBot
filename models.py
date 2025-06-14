@@ -35,6 +35,7 @@ class Event(db.Model):
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    extracted_at = db.Column(db.DateTime, default=datetime.utcnow)  # When this event was extracted from text
     
     # Link to original text input
     text_input_id = db.Column(db.Integer, db.ForeignKey('text_input.id'))
