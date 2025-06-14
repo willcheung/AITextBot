@@ -1,3 +1,4 @@
+import logging
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app import db
@@ -5,6 +6,9 @@ from models import User, Event, TextInput
 from event_extractor import extract_events_from_text, validate_and_clean_event
 from google_calendar import create_calendar_event, update_calendar_event, delete_calendar_event
 from datetime import datetime
+import sentry_sdk
+
+logger = logging.getLogger(__name__)
 
 main_routes = Blueprint("main_routes", __name__)
 

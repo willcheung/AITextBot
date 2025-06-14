@@ -1,11 +1,16 @@
 import json
 import os
+import time
+import logging
 from datetime import datetime, timedelta
 import re
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
 from openai import OpenAI
+import sentry_sdk
+
+logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "your-openai-api-key")
 openai = OpenAI(api_key=OPENAI_API_KEY)
@@ -46,6 +51,8 @@ Provide the output as a JSON object with a "events" key containing a list, where
 Text: '''{text}'''"""
 
     try:
+        logger.info(f"Extracting events from text of length {len(text)}")
+        
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -59,7 +66,11 @@ Text: '''{text}'''"""
             temperature=0.1
         )
         
-        result = json.loads(response.choices[0].message.content)
+        content = response.choices[0].message.content
+        if not content:
+            raise Exception("Empty response from AI service")
+        
+        result = json.loads(content)
         events = result.get("events", [])
         
         # If text is from email, append from email to event names
@@ -68,10 +79,73 @@ Text: '''{text}'''"""
                 if event.get("event_name"):
                     event["event_name"] = f"{event['event_name']} (from {from_email})"
         
+        logger.info(f"Successfully extracted {len(events)} events")
         return events, from_email
         
     except Exception as e:
-        raise Exception(f"Failed to extract events: {str(e)}")
+        error_msg = str(e)
+        logger.error(f"OpenAI API error: {error_msg}")
+        
+        # Handle specific error types
+        if "429" in error_msg or "rate_limit" in error_msg.lower():
+            logger.warning("Rate limit hit, implementing exponential backoff")
+            sentry_sdk.capture_message("OpenAI rate limit exceeded", level="warning")
+            
+            # Try with exponential backoff (3 attempts)
+            for attempt in range(3):
+                wait_time = (2 ** attempt) * 5  # 5, 10, 20 seconds
+                logger.info(f"Retry attempt {attempt + 1} after {wait_time} seconds")
+                time.sleep(wait_time)
+                
+                try:
+                    response = openai.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You are an expert at extracting calendar events from text. Always respond with valid JSON format."
+                            },
+                            {"role": "user", "content": prompt}
+                        ],
+                        response_format={"type": "json_object"},
+                        temperature=0.1
+                    )
+                    
+                    retry_content = response.choices[0].message.content
+                    if not retry_content:
+                        raise Exception("Empty response from AI service on retry")
+                    
+                    result = json.loads(retry_content)
+                    events = result.get("events", [])
+                    
+                    if from_email:
+                        for event in events:
+                            if event.get("event_name"):
+                                event["event_name"] = f"{event['event_name']} (from {from_email})"
+                    
+                    logger.info(f"Successfully extracted {len(events)} events on retry {attempt + 1}")
+                    return events, from_email
+                    
+                except Exception as retry_e:
+                    logger.error(f"Retry {attempt + 1} failed: {str(retry_e)}")
+                    if attempt == 2:  # Last attempt
+                        sentry_sdk.capture_exception(retry_e)
+                        raise Exception(f"OpenAI API failed after 3 attempts due to rate limiting. Please try again in a few minutes.")
+            
+        elif "401" in error_msg or "authentication" in error_msg.lower():
+            logger.error("OpenAI authentication failed")
+            sentry_sdk.capture_exception(e)
+            raise Exception("OpenAI API authentication failed. Please check your API key.")
+            
+        elif "400" in error_msg or "invalid" in error_msg.lower():
+            logger.error("Invalid request to OpenAI API")
+            sentry_sdk.capture_exception(e)
+            raise Exception("Invalid request format. Please try with different text.")
+            
+        else:
+            logger.error(f"Unexpected OpenAI API error: {error_msg}")
+            sentry_sdk.capture_exception(e)
+            raise Exception(f"AI service temporarily unavailable: {error_msg}")
 
 def validate_and_clean_event(event_data):
     """

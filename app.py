@@ -75,3 +75,38 @@ with app.app_context():
     app.register_blueprint(main_routes)
     
     db.create_all()
+
+# Global error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    logger.warning(f"404 error: {request.url}")
+    return render_template('error.html', 
+                         error_code=404, 
+                         error_message="Page not found"), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"500 error: {str(error)}")
+    sentry_sdk.capture_exception(error)
+    db.session.rollback()
+    return render_template('error.html', 
+                         error_code=500, 
+                         error_message="Internal server error"), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
+    sentry_sdk.capture_exception(e)
+    db.session.rollback()
+    
+    # Return JSON error for AJAX requests
+    if request.is_json:
+        return jsonify({
+            'error': 'An unexpected error occurred',
+            'message': str(e) if app.debug else 'Please try again later'
+        }), 500
+    
+    # Return HTML error page for regular requests
+    return render_template('error.html', 
+                         error_code=500, 
+                         error_message="An unexpected error occurred"), 500

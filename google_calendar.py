@@ -1,8 +1,12 @@
 import json
 import os
+import logging
 from datetime import datetime, timedelta
 import requests
 from flask import current_app
+import sentry_sdk
+
+logger = logging.getLogger(__name__)
 
 def refresh_google_token(user):
     """
@@ -35,6 +39,7 @@ def create_calendar_event(user, event_data):
         str: Google event ID if successful
     """
     try:
+        logger.info(f"Creating calendar event: {event_data.get('event_name', 'Unnamed Event')}")
         access_token = refresh_google_token(user)
         
         # Prepare event data for Google Calendar API
@@ -82,21 +87,47 @@ def create_calendar_event(user, event_data):
             'Content-Type': 'application/json'
         }
         
+        logger.info("Making request to Google Calendar API")
         response = requests.post(
             'https://www.googleapis.com/calendar/v3/calendars/primary/events',
             headers=headers,
-            data=json.dumps(calendar_event)
+            data=json.dumps(calendar_event),
+            timeout=30
         )
         
         if response.status_code == 200:
             result = response.json()
-            return result.get('id')
+            event_id = result.get('id')
+            logger.info(f"Successfully created calendar event with ID: {event_id}")
+            return event_id
+        elif response.status_code == 401:
+            logger.error("Google Calendar authentication failed")
+            sentry_sdk.capture_message("Google Calendar authentication failed", level="error")
+            raise Exception("Google Calendar authentication failed. Please sign in again.")
+        elif response.status_code == 403:
+            logger.error("Google Calendar permission denied")
+            sentry_sdk.capture_message("Google Calendar permission denied", level="error")
+            raise Exception("Permission denied. Please ensure Google Calendar access is granted.")
+        elif response.status_code == 429:
+            logger.warning("Google Calendar rate limit exceeded")
+            sentry_sdk.capture_message("Google Calendar rate limit exceeded", level="warning")
+            raise Exception("Google Calendar is temporarily busy. Please try again in a moment.")
         else:
-            current_app.logger.error(f"Google Calendar API error: {response.text}")
-            raise Exception(f"Failed to create calendar event: {response.text}")
+            logger.error(f"Google Calendar API error {response.status_code}: {response.text}")
+            sentry_sdk.capture_message(f"Google Calendar API error: {response.status_code}", level="error")
+            raise Exception(f"Failed to create calendar event. Please try again.")
     
+    except requests.exceptions.Timeout:
+        logger.error("Google Calendar API timeout")
+        sentry_sdk.capture_message("Google Calendar API timeout", level="error")
+        raise Exception("Google Calendar request timed out. Please try again.")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error with Google Calendar API: {str(e)}")
+        sentry_sdk.capture_exception(e)
+        raise Exception("Network error connecting to Google Calendar. Please check your connection.")
     except Exception as e:
-        current_app.logger.error(f"Error creating calendar event: {str(e)}")
+        logger.error(f"Unexpected error creating calendar event: {str(e)}")
+        sentry_sdk.capture_exception(e)
         raise Exception(f"Failed to create calendar event: {str(e)}")
 
 def update_calendar_event(user, google_event_id, event_data):
