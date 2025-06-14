@@ -48,6 +48,15 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_timeout": 20,
+    "pool_size": 10,
+    "max_overflow": 20,
+    "connect_args": {
+        "connect_timeout": 10,
+        "keepalives_idle": 600,
+        "keepalives_interval": 30,
+        "keepalives_count": 3,
+    }
 }
 
 # initialize the app with the extension, flask-sqlalchemy >= 3.0.x
@@ -61,7 +70,12 @@ login_manager.login_view = 'google_auth.login'
 @login_manager.user_loader
 def load_user(user_id):
     from models import User
-    return User.query.get(int(user_id))
+    try:
+        return User.query.get(int(user_id))
+    except Exception as e:
+        logger.error(f"Error loading user {user_id}: {str(e)}")
+        sentry_sdk.capture_exception(e)
+        return None
 
 # Global error handlers
 @app.errorhandler(404)

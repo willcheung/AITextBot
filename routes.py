@@ -1,4 +1,5 @@
 import logging
+import time
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app import db
@@ -30,30 +31,59 @@ def dashboard():
 @main_routes.route("/extract_events", methods=["POST"])
 @login_required
 def extract_events():
+    text_input = None
     try:
+        logger.info(f"User {current_user.id} starting event extraction")
         text = request.form.get("text", "").strip()
         if not text:
             flash("Please enter some text to extract events from.", "error")
             return redirect(url_for("main_routes.dashboard"))
         
-        # Save the text input
-        text_input = TextInput(
-            user_id=current_user.id,
-            original_text=text,
-            source_type="manual"
-        )
-        db.session.add(text_input)
-        db.session.commit()
+        # Validate text length
+        if len(text) > 10000:
+            flash("Text is too long. Please limit to 10,000 characters.", "error")
+            return redirect(url_for("main_routes.dashboard"))
+        
+        # Database operation with retry logic
+        text_input_created = False
+        for attempt in range(3):
+            try:
+                # Save the text input
+                text_input = TextInput()
+                text_input.user_id = current_user.id
+                text_input.original_text = text
+                text_input.source_type = "manual"
+                
+                db.session.add(text_input)
+                db.session.commit()
+                text_input_created = True
+                break
+                
+            except Exception as db_error:
+                logger.warning(f"Database error on attempt {attempt + 1}: {str(db_error)}")
+                db.session.rollback()
+                text_input = None
+                if attempt == 2:
+                    sentry_sdk.capture_exception(db_error)
+                    flash("Database connection issue. Please try again in a moment.", "error")
+                    return redirect(url_for("main_routes.dashboard"))
+                time.sleep(1)  # Brief delay before retry
+        
+        if not text_input_created or text_input is None:
+            flash("Failed to save your text. Please try again.", "error")
+            return redirect(url_for("main_routes.dashboard"))
         
         try:
+            logger.info("Starting AI event extraction")
             # Extract events using AI
             extracted_events, from_email = extract_events_from_text(text)
             
-            if from_email:
+            if from_email and text_input:
                 text_input.from_email = from_email
             
-            text_input.extracted_events = extracted_events
-            text_input.processing_status = "completed"
+            if text_input:
+                text_input.extracted_events = extracted_events
+                text_input.processing_status = "completed"
             
             # Create Event records for each extracted event
             created_events = []
@@ -61,40 +91,82 @@ def extract_events():
                 try:
                     cleaned_event = validate_and_clean_event(event_data)
                     
-                    event = Event(
-                        user_id=current_user.id,
-                        text_input_id=text_input.id,
-                        event_name=cleaned_event['event_name'],
-                        event_description=cleaned_event['event_description'],
-                        start_date=datetime.strptime(cleaned_event['start_date'], '%Y-%m-%d').date() if cleaned_event['start_date'] else None,
-                        start_time=datetime.strptime(cleaned_event['start_time'], '%H:%M').time() if cleaned_event['start_time'] else None,
-                        end_date=datetime.strptime(cleaned_event['end_date'], '%Y-%m-%d').date() if cleaned_event['end_date'] else None,
-                        end_time=datetime.strptime(cleaned_event['end_time'], '%H:%M').time() if cleaned_event['end_time'] else None,
-                        location=cleaned_event['location']
-                    )
+                    event = Event()
+                    event.user_id = current_user.id
+                    if text_input:
+                        event.text_input_id = text_input.id
+                    event.event_name = cleaned_event['event_name']
+                    event.event_description = cleaned_event['event_description']
+                    
+                    # Parse dates safely
+                    if cleaned_event['start_date']:
+                        event.start_date = datetime.strptime(cleaned_event['start_date'], '%Y-%m-%d').date()
+                    if cleaned_event['start_time']:
+                        event.start_time = datetime.strptime(cleaned_event['start_time'], '%H:%M').time()
+                    if cleaned_event['end_date']:
+                        event.end_date = datetime.strptime(cleaned_event['end_date'], '%Y-%m-%d').date()
+                    if cleaned_event['end_time']:
+                        event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
+                    
+                    event.location = cleaned_event['location']
                     
                     db.session.add(event)
                     created_events.append(event)
                     
                 except Exception as e:
-                    flash(f"Error processing event: {str(e)}", "error")
+                    logger.error(f"Error processing individual event: {str(e)}")
+                    flash(f"Skipped one event due to formatting issue: {str(e)}", "warning")
                     continue
             
-            db.session.commit()
+            # Commit all events with retry logic
+            for attempt in range(3):
+                try:
+                    db.session.commit()
+                    break
+                except Exception as commit_error:
+                    logger.warning(f"Commit error on attempt {attempt + 1}: {str(commit_error)}")
+                    db.session.rollback()
+                    if attempt == 2:
+                        sentry_sdk.capture_exception(commit_error)
+                        flash("Failed to save events to database. Please try again.", "error")
+                        return redirect(url_for("main_routes.dashboard"))
+                    time.sleep(1)
             
             if created_events:
+                logger.info(f"Successfully created {len(created_events)} events")
                 flash(f"Successfully extracted {len(created_events)} event(s)!", "success")
             else:
                 flash("No valid events could be extracted from the text.", "warning")
         
         except Exception as e:
-            text_input.processing_status = "failed"
-            text_input.error_message = str(e)
-            db.session.commit()
-            flash(f"Error extracting events: {str(e)}", "error")
+            logger.error(f"Event extraction failed: {str(e)}")
+            sentry_sdk.capture_exception(e)
+            
+            # Update text input status
+            if text_input:
+                try:
+                    text_input.processing_status = "failed"
+                    text_input.error_message = str(e)
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+            
+            # Show user-friendly error message based on error type
+            error_msg = str(e).lower()
+            if "rate limit" in error_msg or "429" in error_msg:
+                flash("AI service is busy. Please wait a moment and try again.", "error")
+            elif "authentication" in error_msg or "401" in error_msg:
+                flash("AI service authentication issue. Please contact support.", "error")
+            elif "network" in error_msg or "timeout" in error_msg:
+                flash("Network connection issue. Please check your connection and try again.", "error")
+            else:
+                flash("Unable to extract events from the text. Please try rephrasing or shortening your text.", "error")
     
     except Exception as e:
-        flash(f"Error processing request: {str(e)}", "error")
+        logger.error(f"Unexpected error in extract_events: {str(e)}", exc_info=True)
+        sentry_sdk.capture_exception(e)
+        db.session.rollback()
+        flash("An unexpected error occurred. Please try again.", "error")
     
     return redirect(url_for("main_routes.dashboard"))
 
