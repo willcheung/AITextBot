@@ -4,7 +4,7 @@ import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
-from flask import Flask
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from sqlalchemy.orm import DeclarativeBase
@@ -63,19 +63,6 @@ def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
 
-with app.app_context():
-    # Make sure to import the models here or their tables won't be created
-    import models  # noqa: F401
-    
-    # Import and register blueprints
-    from google_auth import google_auth
-    from routes import main_routes
-    
-    app.register_blueprint(google_auth)
-    app.register_blueprint(main_routes)
-    
-    db.create_all()
-
 # Global error handlers
 @app.errorhandler(404)
 def not_found_error(error):
@@ -110,3 +97,16 @@ def handle_exception(e):
     return render_template('error.html', 
                          error_code=500, 
                          error_message="An unexpected error occurred"), 500
+
+with app.app_context():
+    # Make sure to import the models here or their tables won't be created
+    import models  # noqa: F401
+    
+    # Import and register blueprints
+    from google_auth import google_auth
+    from routes import main_routes
+    
+    app.register_blueprint(google_auth)
+    app.register_blueprint(main_routes)
+    
+    db.create_all()

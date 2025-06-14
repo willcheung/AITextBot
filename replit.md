@@ -96,7 +96,22 @@ Calendar AI is a Flask-based web application that transforms text input (emails,
 
 Preferred communication style: Simple, everyday language.
 
+## Error Handling & Monitoring
+
+### Comprehensive Error Management
+- **Sentry Integration**: Production-ready error tracking with structured logging
+- **Rate Limiting Protection**: OpenAI API calls with exponential backoff retry logic
+- **Google Calendar Error Handling**: Specific error codes and user-friendly messages
+- **Global Exception Handlers**: 404, 500, and unhandled exception catching
+- **Structured Logging**: JSON-formatted logs with severity levels
+
+### Error Recovery Features
+- **OpenAI Rate Limits**: Automatic retry with 5, 10, 20 second backoff intervals
+- **Google API Failures**: Graceful degradation with actionable error messages
+- **Database Rollbacks**: Automatic transaction rollback on failures
+- **User Feedback**: Clear error messages without exposing technical details
+
 ## Changelog
 
-Changelog:
-- June 13, 2025. Initial setup
+- June 14, 2025: Added comprehensive error handling with Sentry logging service integration
+- June 13, 2025: Initial setup
