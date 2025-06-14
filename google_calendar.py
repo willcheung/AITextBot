@@ -22,13 +22,39 @@ def refresh_google_token(user):
         str: Valid access token
     """
     if not user.google_token:
-        raise Exception("No Google token found for user")
+        raise Exception("Please sign in with Google to sync events to your calendar")
     
-    token_data = json.loads(user.google_token)
-    
-    # Check if token needs refresh (simple check - in production, implement proper token management)
-    # For now, we'll assume the token is valid
-    return token_data.get('access_token')
+    try:
+        token_data = json.loads(user.google_token)
+        access_token = token_data.get('access_token')
+        
+        if not access_token:
+            raise Exception("Invalid Google authentication. Please sign in again")
+        
+        # Test the token by making a simple API call
+        test_headers = {'Authorization': f'Bearer {access_token}'}
+        test_response = requests.get(
+            'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+            headers=test_headers,
+            timeout=10
+        )
+        
+        if test_response.status_code == 401:
+            raise Exception("Google authentication has expired. Please sign in again")
+        elif test_response.status_code != 200:
+            raise Exception("Unable to access Google Calendar. Please check your permissions")
+        
+        return access_token
+        
+    except json.JSONDecodeError:
+        raise Exception("Invalid Google authentication data. Please sign in again")
+    except requests.exceptions.Timeout:
+        raise Exception("Connection timeout. Please try again")
+    except Exception as e:
+        if "sign in" in str(e).lower():
+            raise e
+        else:
+            raise Exception("Google authentication issue. Please sign in again")
 
 def get_or_create_textbot_calendar(access_token):
     """

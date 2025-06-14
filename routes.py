@@ -23,7 +23,7 @@ def index():
 @login_required
 def dashboard():
     # Get user's events ordered by extraction datetime (oldest first)
-    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.extracted_at.asc()).all()
+    events = Event.query.filter_by(user_id=current_user.id).order_by(Event.created_at.desc()).all()
     text_inputs = TextInput.query.filter_by(user_id=current_user.id).order_by(TextInput.created_at.desc()).limit(10).all()
     
     return render_template("dashboard.html", events=events, text_inputs=text_inputs)
@@ -161,8 +161,14 @@ def extract_events():
                             logger.info(f"Auto-synced event '{event.event_name}' to Google Calendar")
                         
                     except Exception as sync_error:
-                        logger.warning(f"Failed to auto-sync event '{event.event_name}': {str(sync_error)}")
-                        # Continue with other events even if one fails
+                        error_msg = str(sync_error)
+                        logger.warning(f"Failed to auto-sync event '{event.event_name}': {error_msg}")
+                        
+                        # If it's an authentication error, provide clear feedback
+                        if "sign in" in error_msg.lower() or "authentication" in error_msg.lower():
+                            flash(f"Google Calendar sync failed: {error_msg}", "warning")
+                            break  # Stop trying other events if auth is broken
+                        # Continue with other events for other types of errors
                         continue
                 
                 # Commit the sync status updates
