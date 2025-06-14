@@ -73,7 +73,7 @@ def get_or_create_textbot_calendar(access_token):
         logger.info("Creating new Textbot calendar")
         calendar_data = {
             'summary': 'Textbot',
-            'description': 'AI-generated calendar events from text extraction',
+            'description': 'AI-generated calendar events from getTextBot.com',
             'timeZone': 'UTC'
         }
         
