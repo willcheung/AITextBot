@@ -54,7 +54,7 @@ Text: '''{text}'''"""
         logger.info(f"Extracting events from text of length {len(text)}")
         
         response = openai.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
@@ -157,14 +157,22 @@ def validate_and_clean_event(event_data):
     Returns:
         dict: Cleaned and validated event data
     """
+    # Helper function to safely strip strings
+    def safe_strip(value, default=''):
+        if value is None:
+            return default
+        if isinstance(value, str):
+            return value.strip() or default
+        return str(value).strip() or default
+    
     cleaned = {
-        'event_name': event_data.get('event_name', '').strip() or 'Untitled Event',
-        'event_description': event_data.get('event_description', '').strip() or '',
+        'event_name': safe_strip(event_data.get('event_name'), 'Untitled Event'),
+        'event_description': safe_strip(event_data.get('event_description'), ''),
         'start_date': event_data.get('start_date'),
         'start_time': event_data.get('start_time'),
         'end_date': event_data.get('end_date'),
         'end_time': event_data.get('end_time'),
-        'location': event_data.get('location', '').strip() or ''
+        'location': safe_strip(event_data.get('location'), '')
     }
     
     # Validate dates
