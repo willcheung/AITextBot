@@ -25,13 +25,15 @@ def refresh_google_token(user):
         raise Exception("Please sign in with Google to sync events to your calendar")
     
     try:
+        from app import db
         token_data = json.loads(user.google_token)
         access_token = token_data.get('access_token')
+        refresh_token = token_data.get('refresh_token')
         
         if not access_token:
             raise Exception("Invalid Google authentication. Please sign in again")
         
-        # Test the token by making a simple API call
+        # Test the current token by making a simple API call
         test_headers = {'Authorization': f'Bearer {access_token}'}
         test_response = requests.get(
             'https://www.googleapis.com/calendar/v3/users/me/calendarList',
@@ -39,21 +41,59 @@ def refresh_google_token(user):
             timeout=10
         )
         
-        if test_response.status_code == 401:
-            raise Exception("Google authentication has expired. Please sign in again")
-        elif test_response.status_code != 200:
-            raise Exception("Unable to access Google Calendar. Please check your permissions")
-        
-        return access_token
+        if test_response.status_code == 200:
+            # Token is still valid
+            return access_token
+        elif test_response.status_code == 401 and refresh_token:
+            # Token expired, try to refresh it
+            logger.info("Access token expired, attempting to refresh")
+            
+            refresh_data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': refresh_token,
+                'client_id': os.environ.get('GOOGLE_OAUTH_CLIENT_ID'),
+                'client_secret': os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET'),
+            }
+            
+            refresh_response = requests.post(
+                'https://oauth2.googleapis.com/token',
+                data=refresh_data,
+                timeout=10
+            )
+            
+            if refresh_response.status_code == 200:
+                new_token_data = refresh_response.json()
+                
+                # Update token data while preserving refresh token
+                token_data['access_token'] = new_token_data['access_token']
+                if 'refresh_token' in new_token_data:
+                    token_data['refresh_token'] = new_token_data['refresh_token']
+                
+                # Save updated token to database
+                user.google_token = json.dumps(token_data)
+                db.session.commit()
+                
+                logger.info("Successfully refreshed Google access token")
+                return new_token_data['access_token']
+            else:
+                logger.error(f"Failed to refresh token: {refresh_response.status_code}")
+                raise Exception("Google authentication has expired. Please sign in again")
+        else:
+            # No refresh token or other error
+            if test_response.status_code == 401:
+                raise Exception("Google authentication has expired. Please sign in again")
+            else:
+                raise Exception("Unable to access Google Calendar. Please check your permissions")
         
     except json.JSONDecodeError:
         raise Exception("Invalid Google authentication data. Please sign in again")
     except requests.exceptions.Timeout:
         raise Exception("Connection timeout. Please try again")
     except Exception as e:
-        if "sign in" in str(e).lower():
+        if "sign in" in str(e).lower() or "expired" in str(e).lower():
             raise e
         else:
+            logger.error(f"Unexpected error in token refresh: {str(e)}")
             raise Exception("Google authentication issue. Please sign in again")
 
 def get_or_create_textbot_calendar(access_token):

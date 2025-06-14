@@ -48,8 +48,10 @@ def login():
         "/callback",
         scope=[
             "openid", "email", "profile",
-            "https://www.googleapis.com/auth/calendar.app.created"
+            "https://www.googleapis.com/auth/calendar"
         ],
+        access_type="offline",  # Request offline access to get refresh token
+        prompt="consent"  # Force consent to ensure refresh token is provided
     )
     return redirect(request_uri)
 
@@ -94,9 +96,10 @@ def callback():
 
     user = User.query.filter_by(email=users_email).first()
     if not user:
-        user = User(username=users_name,
-                    email=users_email,
-                    google_id=google_id)
+        user = User()
+        user.username = users_name
+        user.email = users_email
+        user.google_id = google_id
         db.session.add(user)
 
     # Update the Google token for Calendar API access
