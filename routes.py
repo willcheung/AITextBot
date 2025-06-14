@@ -134,7 +134,46 @@ def extract_events():
             
             if created_events:
                 logger.info(f"Successfully created {len(created_events)} events")
-                flash(f"Successfully extracted {len(created_events)} event(s)!", "success")
+                
+                # Auto-sync all extracted events to Google Calendar
+                synced_count = 0
+                for event in created_events:
+                    try:
+                        # Prepare event data for Google Calendar
+                        event_data = {
+                            'event_name': event.event_name,
+                            'event_description': event.event_description,
+                            'start_date': event.start_date.strftime('%Y-%m-%d') if event.start_date else None,
+                            'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
+                            'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
+                            'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
+                            'location': event.location
+                        }
+                        
+                        # Create event in Google Calendar
+                        google_event_id = create_calendar_event(current_user, event_data)
+                        if google_event_id:
+                            event.google_event_id = google_event_id
+                            event.is_synced = True
+                            synced_count += 1
+                            logger.info(f"Auto-synced event '{event.event_name}' to Google Calendar")
+                        
+                    except Exception as sync_error:
+                        logger.warning(f"Failed to auto-sync event '{event.event_name}': {str(sync_error)}")
+                        # Continue with other events even if one fails
+                        continue
+                
+                # Commit the sync status updates
+                try:
+                    db.session.commit()
+                except Exception as commit_error:
+                    logger.error(f"Failed to update sync status: {str(commit_error)}")
+                    db.session.rollback()
+                
+                if synced_count > 0:
+                    flash(f"Successfully extracted {len(created_events)} event(s) and synced {synced_count} to your Textbot calendar!", "success")
+                else:
+                    flash(f"Successfully extracted {len(created_events)} event(s)! Events are ready for manual sync.", "success")
             else:
                 flash("No valid events could be extracted from the text.", "warning")
         
