@@ -113,5 +113,9 @@ Preferred communication style: Simple, everyday language.
 
 ## Changelog
 
-- June 14, 2025: Added comprehensive error handling with Sentry logging service integration
+- June 14, 2025: 
+  - Added comprehensive error handling with Sentry logging service integration
+  - Implemented dedicated "Textbot" calendar creation and management
+  - Fixed None value validation errors in multi-event processing
+  - Enhanced Google Calendar integration to use separate calendar for AI-generated events
 - June 13, 2025: Initial setup

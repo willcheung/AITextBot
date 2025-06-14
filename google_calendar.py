@@ -27,6 +27,69 @@ def refresh_google_token(user):
     # For now, we'll assume the token is valid
     return token_data.get('access_token')
 
+def get_or_create_textbot_calendar(access_token):
+    """
+    Find existing Textbot calendar or create a new one.
+    
+    Args:
+        access_token: Valid Google access token
+    
+    Returns:
+        str: Calendar ID for the Textbot calendar
+    """
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+    
+    try:
+        # First, list all calendars to find existing Textbot calendar
+        logger.info("Searching for existing Textbot calendar")
+        response = requests.get(
+            'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            calendars = response.json().get('items', [])
+            for calendar in calendars:
+                if calendar.get('summary') == 'Textbot':
+                    calendar_id = calendar.get('id')
+                    logger.info(f"Found existing Textbot calendar with ID: {calendar_id}")
+                    return calendar_id
+        
+        # If Textbot calendar doesn't exist, create it
+        logger.info("Creating new Textbot calendar")
+        calendar_data = {
+            'summary': 'Textbot',
+            'description': 'AI-generated calendar events from text extraction',
+            'timeZone': 'UTC'
+        }
+        
+        response = requests.post(
+            'https://www.googleapis.com/calendar/v3/calendars',
+            headers=headers,
+            data=json.dumps(calendar_data),
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            calendar_id = result.get('id')
+            logger.info(f"Successfully created Textbot calendar with ID: {calendar_id}")
+            return calendar_id
+        else:
+            logger.error(f"Failed to create Textbot calendar: {response.status_code} - {response.text}")
+            raise Exception("Failed to create Textbot calendar")
+            
+    except requests.exceptions.Timeout:
+        logger.error("Timeout while managing Textbot calendar")
+        raise Exception("Calendar operation timed out. Please try again.")
+    except Exception as e:
+        logger.error(f"Error managing Textbot calendar: {str(e)}")
+        raise Exception("Failed to access calendar. Please try again.")
+
 def create_calendar_event(user, event_data):
     """
     Create an event in Google Calendar.
@@ -41,6 +104,9 @@ def create_calendar_event(user, event_data):
     try:
         logger.info(f"Creating calendar event: {event_data.get('event_name', 'Unnamed Event')}")
         access_token = refresh_google_token(user)
+        
+        # Get or create the Textbot calendar
+        calendar_id = get_or_create_textbot_calendar(access_token)
         
         # Prepare event data for Google Calendar API
         start_datetime = event_data['start_date']
@@ -89,7 +155,7 @@ def create_calendar_event(user, event_data):
         
         logger.info("Making request to Google Calendar API")
         response = requests.post(
-            'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+            f'https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events',
             headers=headers,
             data=json.dumps(calendar_event),
             timeout=30
@@ -145,6 +211,9 @@ def update_calendar_event(user, google_event_id, event_data):
     try:
         access_token = refresh_google_token(user)
         
+        # Get the Textbot calendar ID
+        calendar_id = get_or_create_textbot_calendar(access_token)
+        
         # Similar logic as create_calendar_event but for updating
         start_datetime = event_data['start_date']
         end_datetime = event_data.get('end_date', event_data['start_date'])
@@ -186,7 +255,7 @@ def update_calendar_event(user, google_event_id, event_data):
         }
         
         response = requests.put(
-            f'https://www.googleapis.com/calendar/v3/calendars/primary/events/{google_event_id}',
+            f'https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{google_event_id}',
             headers=headers,
             data=json.dumps(calendar_event)
         )
@@ -211,12 +280,15 @@ def delete_calendar_event(user, google_event_id):
     try:
         access_token = refresh_google_token(user)
         
+        # Get the Textbot calendar ID
+        calendar_id = get_or_create_textbot_calendar(access_token)
+        
         headers = {
             'Authorization': f'Bearer {access_token}'
         }
         
         response = requests.delete(
-            f'https://www.googleapis.com/calendar/v3/calendars/primary/events/{google_event_id}',
+            f'https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{google_event_id}',
             headers=headers
         )
         
