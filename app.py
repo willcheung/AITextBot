@@ -1,5 +1,8 @@
 import os
 import logging
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -7,8 +10,28 @@ from flask_login import LoginManager
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Enable debug logging
-logging.basicConfig(level=logging.DEBUG)
+# Configure structured logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Initialize Sentry for error tracking (only if DSN is provided)
+sentry_dsn = os.environ.get("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[
+            FlaskIntegration(),
+            SqlalchemyIntegration(),
+        ],
+        traces_sample_rate=0.1,
+        environment=os.environ.get("FLASK_ENV", "production"),
+    )
+    logger.info("Sentry error tracking initialized")
+else:
+    logger.info("No Sentry DSN provided, using local logging only")
 
 class Base(DeclarativeBase):
     pass

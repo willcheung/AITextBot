@@ -10,8 +10,10 @@ from flask_login import login_required, login_user, logout_user
 from models import User
 from oauthlib.oauth2 import WebApplicationClient
 
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "your-google-client-id")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "your-google-client-secret")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID",
+                                  "your-google-client-id")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET",
+                                      "your-google-client-secret")
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 # Make sure to use this redirect URL. It has to match the one in the whitelist
@@ -42,8 +44,12 @@ def login():
         authorization_endpoint,
         # Replacing http:// with https:// is important as the external
         # protocol must be https to match the URI whitelisted
-        redirect_uri=request.base_url.replace("http://", "https://") + "/callback",
-        scope=["openid", "email", "profile", "https://www.googleapis.com/auth/calendar"],
+        redirect_uri=request.base_url.replace("http://", "https://") +
+        "/callback",
+        scope=[
+            "openid", "email", "profile",
+            "https://www.googleapis.com/auth/calendar.app.created"
+        ],
     )
     return redirect(request_uri)
 
@@ -71,7 +77,7 @@ def callback():
 
     # Store the token for Google Calendar API access
     token_data = token_response.json()
-    
+
     client.parse_request_body_response(json.dumps(token_data))
 
     userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
@@ -88,9 +94,11 @@ def callback():
 
     user = User.query.filter_by(email=users_email).first()
     if not user:
-        user = User(username=users_name, email=users_email, google_id=google_id)
+        user = User(username=users_name,
+                    email=users_email,
+                    google_id=google_id)
         db.session.add(user)
-    
+
     # Update the Google token for Calendar API access
     user.google_token = json.dumps(token_data)
     db.session.commit()
