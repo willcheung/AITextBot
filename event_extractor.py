@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 import re
 
-# the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+# the newest OpenAI model is "gpt-4o-mini" which is the latest optimized version.
 # do not change this unless explicitly requested by the user
 from openai import OpenAI
 import sentry_sdk
