@@ -322,11 +322,11 @@ def update_calendar_event(user, google_event_id, event_data):
             "description": event_data.get('event_description', ''),
             "start": {
                 "dateTime": start_datetime,
-                "timeZone": "UTC"
+                "timeZone": user.timezone
             },
             "end": {
                 "dateTime": end_datetime,
-                "timeZone": "UTC"
+                "timeZone": user.timezone
             }
         }
         
