@@ -143,7 +143,7 @@ def get_or_create_textbot_calendar(user, access_token):
         calendar_data = {
             'summary': 'Textbot',
             'description': 'AI-generated calendar events from text extraction',
-            'timeZone': 'UTC'
+            'timeZone': user.timezone
         }
         
         response = requests.post(
@@ -219,11 +219,11 @@ def create_calendar_event(user, event_data):
             "description": event_data.get('event_description', ''),
             "start": {
                 "dateTime": start_datetime,
-                "timeZone": "UTC"
+                "timeZone": user.timezone
             },
             "end": {
                 "dateTime": end_datetime,
-                "timeZone": "UTC"
+                "timeZone": user.timezone
             }
         }
         

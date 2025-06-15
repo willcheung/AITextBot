@@ -5,7 +5,7 @@ import os
 
 import requests
 from app import db
-from flask import Blueprint, redirect, request, url_for, session, session
+from flask import Blueprint, redirect, request, url_for, session
 from flask_login import login_required, login_user, logout_user
 from models import User
 from oauthlib.oauth2 import WebApplicationClient
@@ -104,6 +104,8 @@ def callback():
         user.username = users_name
         user.email = users_email
         user.google_id = google_id
+        # Set user timezone from session data
+        user.timezone = session.get('user_timezone', 'UTC')
         db.session.add(user)
 
     # Update the Google token for Calendar API access
