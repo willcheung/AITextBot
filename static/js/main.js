@@ -285,6 +285,9 @@ function startGoogleLogin() {
         const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         console.log('Detected timezone:', userTimezone);
         
+        // Show alert to confirm timezone detection is working
+        alert(`Timezone detected: ${userTimezone}`);
+        
         // Create the login URL with timezone parameter
         const loginUrl = '/google_login';
         const redirectUrl = `${loginUrl}?timezone=${encodeURIComponent(userTimezone)}`;
@@ -293,6 +296,7 @@ function startGoogleLogin() {
         window.location.href = redirectUrl;
     } catch (error) {
         console.error('Error detecting timezone:', error);
+        alert(`Error detecting timezone: ${error.message}`);
         // Fallback to login without timezone
         window.location.href = '/google_login';
     }
