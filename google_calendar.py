@@ -36,10 +36,10 @@ def refresh_google_token(user):
         if not access_token:
             raise Exception("Invalid Google authentication. Please sign in again")
         
-        # Test the current token by checking if we can list calendars
+        # Test the current token by checking if we can access the primary calendar
         test_headers = {'Authorization': f'Bearer {access_token}'}
         test_response = requests.get(
-            'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+            'https://www.googleapis.com/calendar/v3/calendars/primary',
             headers=test_headers,
             timeout=10
         )
@@ -110,21 +110,23 @@ def refresh_google_token(user):
             logger.error(f"Unexpected error in token refresh: {str(e)}")
             raise Exception("Google authentication issue. Please sign in again")
 
-def get_or_create_textbot_calendar(access_token):
+def get_or_create_textbot_calendar(user, access_token):
     """
-    Find existing Textbot calendar or create a new one.
+    Get stored Textbot calendar ID or create a new one if needed.
     
     Args:
+        user: User object with textbot_calendar_id
         access_token: Valid Google access token
     
     Returns:
         str: Calendar ID for the Textbot calendar
     """
-    # Check cache first
-    cache_key = access_token[:20]  # Use first 20 chars as cache key
-    if cache_key in _textbot_calendar_cache:
-        logger.info(f"Using cached Textbot calendar ID: {_textbot_calendar_cache[cache_key]}")
-        return _textbot_calendar_cache[cache_key]
+    from app import db
+    
+    # Check if user already has a stored calendar ID
+    if user.textbot_calendar_id:
+        logger.info(f"Using stored Textbot calendar ID: {user.textbot_calendar_id}")
+        return user.textbot_calendar_id
     
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -132,25 +134,8 @@ def get_or_create_textbot_calendar(access_token):
     }
     
     try:
-        # First, search for existing Textbot calendar
-        logger.info("Searching for existing Textbot calendar")
-        response = requests.get(
-            'https://www.googleapis.com/calendar/v3/users/me/calendarList',
-            headers=headers,
-            timeout=30
-        )
-        
-        if response.status_code == 200:
-            calendars = response.json().get('items', [])
-            for calendar in calendars:
-                if calendar.get('summary') == 'Textbot':
-                    calendar_id = calendar.get('id')
-                    logger.info(f"Found existing Textbot calendar with ID: {calendar_id}")
-                    _textbot_calendar_cache[cache_key] = calendar_id
-                    return calendar_id
-        
-        # If Textbot calendar doesn't exist, create it
-        logger.info("Creating new Textbot calendar")
+        # Create new Textbot calendar since user doesn't have one stored
+        logger.info("Creating new Textbot calendar for user")
         calendar_data = {
             'summary': 'Textbot',
             'description': 'AI-generated calendar events from text extraction',
@@ -167,19 +152,23 @@ def get_or_create_textbot_calendar(access_token):
         if response.status_code == 200:
             result = response.json()
             calendar_id = result.get('id')
-            logger.info(f"Successfully created Textbot calendar with ID: {calendar_id}")
-            _textbot_calendar_cache[cache_key] = calendar_id
+            
+            # Store the calendar ID in the user's record
+            user.textbot_calendar_id = calendar_id
+            db.session.commit()
+            
+            logger.info(f"Successfully created and stored Textbot calendar with ID: {calendar_id}")
             return calendar_id
         else:
             logger.error(f"Failed to create Textbot calendar: {response.status_code} - {response.text}")
             raise Exception("Failed to create Textbot calendar")
             
     except requests.exceptions.Timeout:
-        logger.error("Timeout while managing Textbot calendar")
+        logger.error("Timeout while creating Textbot calendar")
         raise Exception("Calendar operation timed out. Please try again.")
     except Exception as e:
-        logger.error(f"Error managing Textbot calendar: {str(e)}")
-        raise Exception("Failed to access calendar. Please try again.")
+        logger.error(f"Error creating Textbot calendar: {str(e)}")
+        raise Exception("Failed to create calendar. Please try again.")
 
 def create_calendar_event(user, event_data):
     """
@@ -197,7 +186,7 @@ def create_calendar_event(user, event_data):
         access_token = refresh_google_token(user)
         
         # Get or create the Textbot calendar
-        calendar_id = get_or_create_textbot_calendar(access_token)
+        calendar_id = get_or_create_textbot_calendar(user, access_token)
         
         # Prepare event data for Google Calendar API
         start_datetime = event_data['start_date']

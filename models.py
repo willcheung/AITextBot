@@ -9,6 +9,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     google_id = db.Column(db.String(100), unique=True, nullable=True)
     google_token = db.Column(db.Text, nullable=True)
+    textbot_calendar_id = db.Column(db.String(100), nullable=True)  # Store Textbot calendar ID
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship with events
