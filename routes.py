@@ -35,12 +35,15 @@ def extract_events():
     try:
         logger.info(f"User {current_user.id} starting event extraction")
         text = request.form.get("text", "").strip()
+        
         if not text:
+            logger.warning(f"User {current_user.id} submitted empty text")
             flash("Please enter some text to extract events from.", "error")
             return redirect(url_for("main_routes.dashboard"))
         
         # Validate text length
         if len(text) > 10000:
+            logger.warning(f"User {current_user.id} submitted text that's too long: {len(text)} characters")
             flash("Text is too long. Please limit to 10,000 characters.", "error")
             return redirect(url_for("main_routes.dashboard"))
         
@@ -284,6 +287,8 @@ def update_event(event_id):
         db.session.commit()
     
     except Exception as e:
+        logger.error(f"Error updating event {event_id} for user {current_user.id}: {str(e)}", exc_info=True)
+        sentry_sdk.capture_exception(e)
         db.session.rollback()
         flash(f"Error updating event: {str(e)}", "error")
     
@@ -318,6 +323,8 @@ def sync_to_calendar(event_id):
         flash("Event successfully added to Google Calendar!", "success")
     
     except Exception as e:
+        logger.error(f"Error syncing event {event_id} to calendar for user {current_user.id}: {str(e)}", exc_info=True)
+        sentry_sdk.capture_exception(e)
         flash(f"Error syncing to Google Calendar: {str(e)}", "error")
     
     return redirect(url_for("main_routes.dashboard"))
@@ -342,6 +349,8 @@ def delete_event(event_id):
         flash("Event deleted successfully!", "success")
     
     except Exception as e:
+        logger.error(f"Error deleting event {event_id} for user {current_user.id}: {str(e)}", exc_info=True)
+        sentry_sdk.capture_exception(e)
         db.session.rollback()
         flash(f"Error deleting event: {str(e)}", "error")
     
