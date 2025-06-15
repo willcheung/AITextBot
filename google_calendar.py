@@ -8,8 +8,7 @@ import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
-# Simple cache for Textbot calendar ID to avoid repeated creation
-_textbot_calendar_cache = {}
+# Database-stored calendar IDs replace caching for better reliability
 
 def refresh_google_token(user):
     """
@@ -292,7 +291,7 @@ def update_calendar_event(user, google_event_id, event_data):
         access_token = refresh_google_token(user)
         
         # Get the Textbot calendar ID
-        calendar_id = get_or_create_textbot_calendar(access_token)
+        calendar_id = get_or_create_textbot_calendar(user, access_token)
         
         # Similar logic as create_calendar_event but for updating
         start_datetime = event_data['start_date']
@@ -361,7 +360,7 @@ def delete_calendar_event(user, google_event_id):
         access_token = refresh_google_token(user)
         
         # Get the Textbot calendar ID
-        calendar_id = get_or_create_textbot_calendar(access_token)
+        calendar_id = get_or_create_textbot_calendar(user, access_token)
         
         headers = {
             'Authorization': f'Bearer {access_token}'
