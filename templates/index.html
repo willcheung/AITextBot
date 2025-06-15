@@ -15,7 +15,7 @@
                 
                 {% if not current_user.is_authenticated %}
                     <div class="hero-actions mt-4">
-                        <a href="{{ url_for('google_auth.login') }}" class="btn btn-primary btn-lg" onclick="setTimezoneAndRedirect(this)">
+                        <a href="{{ url_for('google_auth.login') }}" class="btn btn-primary btn-lg" onclick="return setTimezoneAndRedirect(this)">
                             <i data-feather="calendar" class="me-2"></i>
                             Get Started with Google
                         </a>
