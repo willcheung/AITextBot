@@ -280,19 +280,18 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Function to start Google login with timezone detection
-function startGoogleLogin() {
+window.startGoogleLogin = function() {
+    alert('Function called!');
+    console.log('startGoogleLogin called');
+    
     try {
-        // Get timezone offset in minutes
-        const offset = new Date().getTimezoneOffset();
-        
         // Get timezone name
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         
         console.log('Detected timezone:', timezone);
-        console.log('Timezone offset (minutes):', offset);
         
         // Show alert to confirm timezone detection is working
-        alert(`Timezone: ${timezone}, Offset: ${offset} minutes`);
+        alert(`Detected timezone: ${timezone}`);
         
         // Create the login URL with timezone parameter
         const loginUrl = '/google_login';
@@ -302,7 +301,7 @@ function startGoogleLogin() {
         window.location.href = redirectUrl;
     } catch (error) {
         console.error('Error detecting timezone:', error);
-        alert(`Error detecting timezone: ${error.message}`);
+        alert(`Error: ${error.message}`);
         // Fallback to login without timezone
         window.location.href = '/google_login';
     }

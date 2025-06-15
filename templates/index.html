@@ -15,7 +15,7 @@
                 
                 {% if not current_user.is_authenticated %}
                     <div class="hero-actions mt-4">
-                        <a href="#" class="btn btn-primary btn-lg" onclick="startGoogleLogin()">
+                        <a href="#" class="btn btn-primary btn-lg" onclick="startGoogleLogin(); return false;">
                             <i data-feather="calendar" class="me-2"></i>
                             Get Started with Google
                         </a>
