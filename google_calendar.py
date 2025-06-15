@@ -30,6 +30,9 @@ def refresh_google_token(user):
         access_token = token_data.get('access_token')
         refresh_token = token_data.get('refresh_token')
         
+        logger.info(f"Token data keys: {list(token_data.keys())}")
+        logger.info(f"Has refresh token: {bool(refresh_token)}")
+        
         if not access_token:
             raise Exception("Invalid Google authentication. Please sign in again")
         
@@ -47,6 +50,7 @@ def refresh_google_token(user):
         elif test_response.status_code == 401 and refresh_token:
             # Token expired, try to refresh it
             logger.info("Access token expired, attempting to refresh")
+            logger.info(f"Using refresh token: {refresh_token[:10]}...")
             
             refresh_data = {
                 'grant_type': 'refresh_token',
@@ -60,6 +64,10 @@ def refresh_google_token(user):
                 data=refresh_data,
                 timeout=10
             )
+            
+            logger.info(f"Refresh response status: {refresh_response.status_code}")
+            if refresh_response.status_code != 200:
+                logger.error(f"Refresh response error: {refresh_response.text}")
             
             if refresh_response.status_code == 200:
                 new_token_data = refresh_response.json()
@@ -81,8 +89,14 @@ def refresh_google_token(user):
         else:
             # No refresh token or other error
             if test_response.status_code == 401:
-                raise Exception("Google authentication has expired. Please sign in again")
+                if not refresh_token:
+                    logger.warning("No refresh token available, user needs to re-authenticate")
+                    raise Exception("Google authentication has expired. Please sign in again with 'Refresh Google Access' button")
+                else:
+                    logger.error("Token refresh failed or other auth issue")
+                    raise Exception("Google authentication has expired. Please sign in again")
             else:
+                logger.error(f"Calendar API error: {test_response.status_code} - {test_response.text}")
                 raise Exception("Unable to access Google Calendar. Please check your permissions")
         
     except json.JSONDecodeError:
