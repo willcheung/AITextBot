@@ -5,7 +5,7 @@ import os
 
 import requests
 from app import db
-from flask import Blueprint, redirect, request, url_for, session
+from flask import Blueprint, redirect, request, url_for, session, session
 from flask_login import login_required, login_user, logout_user
 from models import User
 from oauthlib.oauth2 import WebApplicationClient
@@ -39,6 +39,10 @@ google_auth = Blueprint("google_auth", __name__)
 def login():
     google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+
+    # Store timezone in session for later use during user creation
+    timezone = request.args.get('timezone', 'UTC')
+    session['user_timezone'] = timezone
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,

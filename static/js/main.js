@@ -279,6 +279,19 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// Function to detect user timezone and redirect to Google login
+function setTimezoneAndRedirect(element) {
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const loginUrl = element.href;
+    
+    // Add timezone as URL parameter
+    const separator = loginUrl.includes('?') ? '&' : '?';
+    window.location.href = `${loginUrl}${separator}timezone=${encodeURIComponent(userTimezone)}`;
+    
+    // Prevent default link behavior
+    return false;
+}
+
 // Initialize tooltips (if Bootstrap tooltips are needed in the future)
 function initializeTooltips() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
