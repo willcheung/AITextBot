@@ -279,27 +279,22 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Function to detect user timezone and redirect to Google login
-function setTimezoneAndRedirect(element) {
+// Function to start Google login with timezone detection
+function startGoogleLogin() {
     try {
         const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const loginUrl = element.href;
-        
         console.log('Detected timezone:', userTimezone);
         
-        // Add timezone as URL parameter
-        const separator = loginUrl.includes('?') ? '&' : '?';
-        const redirectUrl = `${loginUrl}${separator}timezone=${encodeURIComponent(userTimezone)}`;
+        // Create the login URL with timezone parameter
+        const loginUrl = '/google_login';
+        const redirectUrl = `${loginUrl}?timezone=${encodeURIComponent(userTimezone)}`;
         
         console.log('Redirecting to:', redirectUrl);
         window.location.href = redirectUrl;
-        
-        // Prevent default link behavior
-        return false;
     } catch (error) {
         console.error('Error detecting timezone:', error);
-        // Allow default behavior if timezone detection fails
-        return true;
+        // Fallback to login without timezone
+        window.location.href = '/google_login';
     }
 }
 

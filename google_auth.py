@@ -43,7 +43,6 @@ def login():
     # Store timezone in session for later use during user creation
     timezone = request.args.get('timezone', 'UTC')
     session['user_timezone'] = timezone
-    print(f"DEBUG: Login route - timezone parameter: {timezone}")
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
@@ -108,7 +107,6 @@ def callback():
         # Set user timezone from session data
         user_timezone = session.get('user_timezone', 'UTC')
         user.timezone = user_timezone
-        print(f"DEBUG: Callback route - creating new user with timezone: {user_timezone}")
         db.session.add(user)
 
     # Update the Google token for Calendar API access
@@ -120,10 +118,7 @@ def callback():
     return redirect(url_for("main_routes.dashboard"))
 
 
-@google_auth.route("/test_timezone")
-def test_timezone():
-    timezone = request.args.get('timezone', 'Not provided')
-    return f"Timezone parameter: {timezone}"
+
 
 @google_auth.route("/logout")
 @login_required
