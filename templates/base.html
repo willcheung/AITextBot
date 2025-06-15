@@ -39,7 +39,7 @@
                         Logout
                     </a>
                 {% else %}
-                    <a class="nav-link" href="{{ url_for('google_auth.login') }}">
+                    <a class="nav-link" href="#" onclick="startGoogleLogin(); return false;">
                         <i data-feather="log-in" class="me-1"></i>
                         Sign in with Google
                     </a>
