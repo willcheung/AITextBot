@@ -35,18 +35,23 @@ def refresh_google_token(user):
         if not access_token:
             raise Exception("Invalid Google authentication. Please sign in again")
         
-        # Test the current token by checking if we can access the primary calendar
-        test_headers = {'Authorization': f'Bearer {access_token}'}
+        # Test the current token by checking if we can access the calendar service
+        # Using the tokeninfo endpoint to validate the token without requiring calendar permissions
         test_response = requests.get(
-            'https://www.googleapis.com/calendar/v3/calendars/primary',
-            headers=test_headers,
+            f'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}',
             timeout=10
         )
         
         if test_response.status_code == 200:
-            # Token is still valid
-            return access_token
-        elif test_response.status_code == 401 and refresh_token:
+            # Token is still valid, check if it has the right scope
+            token_info = test_response.json()
+            if 'scope' in token_info and 'calendar' in token_info['scope']:
+                return access_token
+            else:
+                logger.warning("Token doesn't have required calendar scope, attempting refresh")
+        
+        # If token is invalid or doesn't have proper scope, attempt refresh
+        if refresh_token:
             # Token expired, try to refresh it
             logger.info("Access token expired, attempting to refresh")
             logger.info(f"Using refresh token: {refresh_token[:10]}...")
