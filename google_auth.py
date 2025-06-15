@@ -48,7 +48,8 @@ def login():
         "/callback",
         scope=[
             "openid", "email", "profile",
-            "https://www.googleapis.com/auth/calendar.app.created"
+            "https://www.googleapis.com/auth/calendar.app.created",
+            "https://www.googleapis.com/auth/calendar.readonly"
         ],
         access_type="offline",  # Request offline access to get refresh token
         prompt="consent"  # Force consent to ensure refresh token is provided
