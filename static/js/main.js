@@ -282,11 +282,46 @@ document.addEventListener('keydown', function(e) {
 // Function to start Google login with timezone detection
 function startGoogleLogin() {
     try {
-        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        // Try multiple methods to detect timezone
+        let userTimezone = 'UTC';
+        
+        // Method 1: Intl.DateTimeFormat (most reliable)
+        if (Intl && Intl.DateTimeFormat) {
+            userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }
+        
+        // Method 2: Check if we got UTC, try alternative detection
+        if (userTimezone === 'UTC') {
+            const offset = new Date().getTimezoneOffset();
+            const offsetHours = Math.abs(offset / 60);
+            const offsetMinutes = Math.abs(offset % 60);
+            const sign = offset > 0 ? '-' : '+';
+            
+            // Common timezone mappings based on offset
+            const timezoneMap = {
+                '-8': 'America/Los_Angeles',
+                '-7': 'America/Denver', 
+                '-6': 'America/Chicago',
+                '-5': 'America/New_York',
+                '-4': 'America/Halifax',
+                '0': 'Europe/London',
+                '1': 'Europe/Paris',
+                '2': 'Europe/Berlin',
+                '8': 'Asia/Shanghai',
+                '9': 'Asia/Tokyo'
+            };
+            
+            const offsetKey = `${sign}${offsetHours}`;
+            if (timezoneMap[offsetKey]) {
+                userTimezone = timezoneMap[offsetKey];
+            }
+        }
+        
         console.log('Detected timezone:', userTimezone);
+        console.log('Timezone offset (minutes):', new Date().getTimezoneOffset());
         
         // Show alert to confirm timezone detection is working
-        alert(`Timezone detected: ${userTimezone}`);
+        alert(`Timezone detected: ${userTimezone} (Offset: ${new Date().getTimezoneOffset()} minutes)`);
         
         // Create the login URL with timezone parameter
         const loginUrl = '/google_login';
