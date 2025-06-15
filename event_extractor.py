@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 import re
 
-# the newest OpenAI model is "gpt-4o-mini" which is the latest optimized version.
+# the newest OpenAI model is "gpt-4.1-mini" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
 from openai import OpenAI
 import sentry_sdk
@@ -54,7 +54,7 @@ Text: '''{text}'''"""
         logger.info(f"Extracting events from text of length {len(text)}")
         
         response = openai.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4.1-mini",
             messages=[
                 {
                     "role": "system",
@@ -99,7 +99,7 @@ Text: '''{text}'''"""
                 
                 try:
                     response = openai.chat.completions.create(
-                        model="gpt-4o",
+                        model="gpt-4.1-mini",
                         messages=[
                             {
                                 "role": "system",
