@@ -100,22 +100,29 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
 
+    # Get timezone from session
+    user_timezone = session.get('user_timezone', 'UTC')
+    print(f"CALLBACK DEBUG: Retrieved timezone from session: {user_timezone}")
+
     user = User.query.filter_by(email=users_email).first()
     if not user:
         user = User()
         user.username = users_name
         user.email = users_email
         user.google_id = google_id
-        # Set user timezone from session data
-        user_timezone = session.get('user_timezone', 'UTC')
         user.timezone = user_timezone
-        print(f"CALLBACK DEBUG: Creating user with timezone: {user_timezone}")
-        print(f"CALLBACK DEBUG: Session timezone: {session.get('user_timezone')}")
+        print(f"CALLBACK DEBUG: Creating new user with timezone: {user_timezone}")
         db.session.add(user)
+    else:
+        # Update existing user's timezone
+        user.timezone = user_timezone
+        print(f"CALLBACK DEBUG: Updating existing user timezone to: {user_timezone}")
 
     # Update the Google token for Calendar API access
     user.google_token = json.dumps(token_data)
     db.session.commit()
+    
+    print(f"CALLBACK DEBUG: User saved with timezone: {user.timezone}")
 
     login_user(user)
 
