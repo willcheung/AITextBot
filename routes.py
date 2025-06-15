@@ -41,12 +41,6 @@ def extract_events():
             flash("Please enter some text to extract events from.", "error")
             return redirect(url_for("main_routes.dashboard"))
         
-        # Validate text length
-        if len(text) > 10000:
-            logger.warning(f"User {current_user.id} submitted text that's too long: {len(text)} characters")
-            flash("Text is too long. Please limit to 10,000 characters.", "error")
-            return redirect(url_for("main_routes.dashboard"))
-        
         # Database operation with retry logic
         text_input_created = False
         for attempt in range(3):
@@ -79,7 +73,8 @@ def extract_events():
         try:
             logger.info("Starting AI event extraction")
             # Extract events using AI
-            extracted_events, from_email = extract_events_from_text(text)
+            user_timezone = current_user.timezone if current_user.timezone else "UTC"
+            extracted_events, from_email = extract_events_from_text(text, user_timezone=user_timezone)
             
             if from_email and text_input:
                 text_input.from_email = from_email

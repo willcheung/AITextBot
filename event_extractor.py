@@ -15,13 +15,14 @@ logger = logging.getLogger(__name__)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "your-openai-api-key")
 openai = OpenAI(api_key=OPENAI_API_KEY)
 
-def extract_events_from_text(text, current_date=None):
+def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
     """
     Extract events from text using OpenAI API following the specified prompt format.
     
     Args:
         text (str): The input text containing event information
         current_date (str): Current date in YYYY-MM-DD format for resolving relative dates
+        user_timezone (str): User's timezone for proper time handling
     
     Returns:
         list: List of extracted events as dictionaries
@@ -45,6 +46,10 @@ def extract_events_from_text(text, current_date=None):
 - The location (if specified).
 
 If a date is relative (e.g., "next Monday," "tomorrow"), assume the current date is {current_date} for resolving it.
+
+The user's timezone is {user_timezone}. When processing times and dates, consider this timezone for proper interpretation of local times mentioned in the text.
+
+If text is a travel itinerary when sometimes arrival time is early than departure time due to timezone, convert all times to the user's timezone ({user_timezone}) for consistency. Always ensure end times are after start times by properly accounting for timezone differences and date changes. Calculate flight duration based on actual timezone-adjusted times. Return the time and dates in the format specified above. If text includes traveler's names, include them in the event name.
 
 Provide the output as a JSON object with a "events" key containing a list, where each object in the list represents an event with keys: "event_name", "event_description", "start_date", "start_time", "end_date", "end_time", "location". If a piece of information is not found, use null for its value.
 
