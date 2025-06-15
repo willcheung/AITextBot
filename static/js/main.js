@@ -282,50 +282,21 @@ document.addEventListener('keydown', function(e) {
 // Function to start Google login with timezone detection
 function startGoogleLogin() {
     try {
-        // Try multiple methods to detect timezone
-        let userTimezone = 'UTC';
+        // Get timezone offset in minutes
+        const offset = new Date().getTimezoneOffset();
         
-        // Method 1: Intl.DateTimeFormat (most reliable)
-        if (Intl && Intl.DateTimeFormat) {
-            userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        }
+        // Get timezone name
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         
-        // Method 2: Check if we got UTC, try alternative detection
-        if (userTimezone === 'UTC') {
-            const offset = new Date().getTimezoneOffset();
-            const offsetHours = Math.abs(offset / 60);
-            const offsetMinutes = Math.abs(offset % 60);
-            const sign = offset > 0 ? '-' : '+';
-            
-            // Common timezone mappings based on offset
-            const timezoneMap = {
-                '-8': 'America/Los_Angeles',
-                '-7': 'America/Denver', 
-                '-6': 'America/Chicago',
-                '-5': 'America/New_York',
-                '-4': 'America/Halifax',
-                '0': 'Europe/London',
-                '1': 'Europe/Paris',
-                '2': 'Europe/Berlin',
-                '8': 'Asia/Shanghai',
-                '9': 'Asia/Tokyo'
-            };
-            
-            const offsetKey = `${sign}${offsetHours}`;
-            if (timezoneMap[offsetKey]) {
-                userTimezone = timezoneMap[offsetKey];
-            }
-        }
-        
-        console.log('Detected timezone:', userTimezone);
-        console.log('Timezone offset (minutes):', new Date().getTimezoneOffset());
+        console.log('Detected timezone:', timezone);
+        console.log('Timezone offset (minutes):', offset);
         
         // Show alert to confirm timezone detection is working
-        alert(`Timezone detected: ${userTimezone} (Offset: ${new Date().getTimezoneOffset()} minutes)`);
+        alert(`Timezone: ${timezone}, Offset: ${offset} minutes`);
         
         // Create the login URL with timezone parameter
         const loginUrl = '/google_login';
-        const redirectUrl = `${loginUrl}?timezone=${encodeURIComponent(userTimezone)}`;
+        const redirectUrl = `${loginUrl}?timezone=${encodeURIComponent(timezone)}`;
         
         console.log('Redirecting to:', redirectUrl);
         window.location.href = redirectUrl;
