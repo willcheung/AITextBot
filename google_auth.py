@@ -43,8 +43,6 @@ def login():
     # Store timezone in session for later use during user creation
     timezone = request.args.get('timezone', 'UTC')
     session['user_timezone'] = timezone
-    print(f"LOGIN DEBUG: Received timezone parameter: {timezone}")
-    print(f"LOGIN DEBUG: Stored in session: {session.get('user_timezone')}")
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
@@ -102,7 +100,6 @@ def callback():
 
     # Get timezone from session
     user_timezone = session.get('user_timezone', 'UTC')
-    print(f"CALLBACK DEBUG: Retrieved timezone from session: {user_timezone}")
 
     user = User.query.filter_by(email=users_email).first()
     if not user:
@@ -111,18 +108,14 @@ def callback():
         user.email = users_email
         user.google_id = google_id
         user.timezone = user_timezone
-        print(f"CALLBACK DEBUG: Creating new user with timezone: {user_timezone}")
         db.session.add(user)
     else:
         # Update existing user's timezone
         user.timezone = user_timezone
-        print(f"CALLBACK DEBUG: Updating existing user timezone to: {user_timezone}")
 
     # Update the Google token for Calendar API access
     user.google_token = json.dumps(token_data)
     db.session.commit()
-    
-    print(f"CALLBACK DEBUG: User saved with timezone: {user.timezone}")
 
     login_user(user)
 

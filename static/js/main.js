@@ -281,40 +281,19 @@ document.addEventListener('keydown', function(e) {
 
 // Function to start Google login with timezone detection
 window.startGoogleLogin = function() {
-    console.log('startGoogleLogin function called');
-    
     try {
-        // Get timezone name using multiple methods for reliability
-        let timezone = 'UTC';
-        
-        if (Intl && Intl.DateTimeFormat) {
-            timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            console.log('Timezone detected via Intl:', timezone);
-        } else {
-            console.log('Intl API not available, using UTC fallback');
-        }
-        
-        // Additional debugging
-        console.log('Final timezone to send:', timezone);
-        console.log('User agent:', navigator.userAgent);
+        // Get timezone name
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         
         // Create the login URL with timezone parameter
         const loginUrl = '/google_login';
         const redirectUrl = `${loginUrl}?timezone=${encodeURIComponent(timezone)}`;
         
-        console.log('Full redirect URL:', redirectUrl);
-        
-        // Add a small delay to ensure console logs are visible
-        setTimeout(() => {
-            window.location.href = redirectUrl;
-        }, 100);
-        
+        window.location.href = redirectUrl;
     } catch (error) {
-        console.error('Error in timezone detection:', error);
+        console.error('Error detecting timezone:', error);
         // Fallback to login without timezone
-        setTimeout(() => {
-            window.location.href = '/google_login';
-        }, 100);
+        window.location.href = '/google_login';
     }
 }
 
