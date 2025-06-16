@@ -1,0 +1,53 @@
+
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Calendar background -->
+  <rect x="4" y="6" width="32" height="28" rx="4" fill="#4F46E5" stroke="#3730A3" stroke-width="1"/>
+  
+  <!-- Calendar header -->
+  <rect x="4" y="6" width="32" height="8" rx="4" fill="#6366F1"/>
+  <rect x="4" y="10" width="32" height="4" fill="#4F46E5"/>
+  
+  <!-- Calendar rings -->
+  <circle cx="12" cy="4" r="2" fill="none" stroke="#6B7280" stroke-width="1.5"/>
+  <circle cx="28" cy="4" r="2" fill="none" stroke="#6B7280" stroke-width="1.5"/>
+  
+  <!-- Calendar grid -->
+  <line x1="10" y1="18" x2="30" y2="18" stroke="#E5E7EB" stroke-width="0.5"/>
+  <line x1="10" y1="22" x2="30" y2="22" stroke="#E5E7EB" stroke-width="0.5"/>
+  <line x1="10" y1="26" x2="30" y2="26" stroke="#E5E7EB" stroke-width="0.5"/>
+  <line x1="14" y1="16" x2="14" y2="30" stroke="#E5E7EB" stroke-width="0.5"/>
+  <line x1="18" y1="16" x2="18" y2="30" stroke="#E5E7EB" stroke-width="0.5"/>
+  <line x1="22" y1="16" x2="22" y2="30" stroke="#E5E7EB" stroke-width="0.5"/>
+  <line x1="26" y1="16" x2="26" y2="30" stroke="#E5E7EB" stroke-width="0.5"/>
+  
+  <!-- AI brain/circuit pattern -->
+  <g opacity="0.8">
+    <!-- Central node -->
+    <circle cx="20" cy="24" r="2" fill="#F59E0B"/>
+    
+    <!-- Connected nodes -->
+    <circle cx="16" cy="20" r="1" fill="#F59E0B"/>
+    <circle cx="24" cy="20" r="1" fill="#F59E0B"/>
+    <circle cx="16" cy="28" r="1" fill="#F59E0B"/>
+    <circle cx="24" cy="28" r="1" fill="#F59E0B"/>
+    
+    <!-- Connections -->
+    <line x1="20" y1="24" x2="16" y2="20" stroke="#F59E0B" stroke-width="1" opacity="0.6"/>
+    <line x1="20" y1="24" x2="24" y2="20" stroke="#F59E0B" stroke-width="1" opacity="0.6"/>
+    <line x1="20" y1="24" x2="16" y2="28" stroke="#F59E0B" stroke-width="1" opacity="0.6"/>
+    <line x1="20" y1="24" x2="24" y2="28" stroke="#F59E0B" stroke-width="1" opacity="0.6"/>
+    
+    <!-- Small connecting dots -->
+    <circle cx="18" cy="22" r="0.5" fill="#F59E0B" opacity="0.7"/>
+    <circle cx="22" cy="22" r="0.5" fill="#F59E0B" opacity="0.7"/>
+    <circle cx="18" cy="26" r="0.5" fill="#F59E0B" opacity="0.7"/>
+    <circle cx="22" cy="26" r="0.5" fill="#F59E0B" opacity="0.7"/>
+  </g>
+  
+  <!-- Subtle sparkle effects -->
+  <g opacity="0.6">
+    <path d="M8 12 L9 13 L8 14 L7 13 Z" fill="#FCD34D"/>
+    <path d="M32 20 L33 21 L32 22 L31 21 Z" fill="#FCD34D"/>
+    <path d="M11 30 L12 31 L11 32 L10 31 Z" fill="#FCD34D"/>
+  </g>
+</svg>
