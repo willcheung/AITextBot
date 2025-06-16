@@ -115,6 +115,8 @@ def extract_events():
                     
                 except Exception as e:
                     logger.error(f"Error processing individual event: {str(e)}")
+                    logger.error(f"Raw event data: {event_data}")
+                    sentry_sdk.capture_exception(e)
                     flash(f"Skipped one event due to formatting issue: {str(e)}", "warning")
                     continue
             

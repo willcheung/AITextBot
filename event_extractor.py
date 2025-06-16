@@ -36,20 +36,33 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
     if email_match:
         from_email = email_match.group(1)
     
-    prompt = f"""Given the following text, extract all event information. For each event, identify:
+    prompt = f"""For all text extraction workflow below, retain original language as much as possible. 
+
+Given the following text, extract all event information. For each event, identify:
 - The event name.
-- The event description that gives context to this calendar event.
-- The start date (in YYYY-MM-DD format).
-- The start time (in HH:MM 24-hour format, if specified).
-- The end date (in YYYY-MM-DD format, if specified or different from start date).
-- The end time (in HH:MM 24-hour format, if specified).
+- The event description that summarizes this calendar event. Include details like booking codes, confirmation numbers, and other important details for the event.
+- The start datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
+- The end datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
 - The location (if specified).
 
+Important: If event is a flight itinerary, extract each event and carefully convert timezones:
+- Traveler's timezone is {user_timezone}.
+- The event name. Add traveler’s name(s) from the text into the event name.
+- The event description that gives context to this calendar event. Include flight duration and other critical travel details like travel agent contact, confirmation number, booking details.
+- The start datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone accounting for standard time or daylight saving time.
+- The end datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone accounting for standard time or daylight saving time.
+- The location is departure airport.
+- Identify the departure and arrival airport codes or cities.
+- Use the known IANA time zones for these airports to determine their timezone offsets for the specified dates. (Example: San Francisco International Airport (SFO) = America/Los_Angeles (UTC-7 during DST in July-August)
+Taiwan Taoyuan International Airport (TPE) = Asia/Taipei (UTC+8 year-round))
+- Using the departure date and time with departure airport timezone, convert it to traveler's timezone. Consider daylight savings there is a US timezone. The converted date/time will be the event start date and time in traveler's timezone.
+- Using the arrival date and time with arrival airport timezone, convert it to traveler's timezone. Consider daylight savings there is a US timezone. The converted date/time will be the event end date and time in traveler's timezone.
+- Calculate the flight duration using traveler's timezone.
+- If flight duration is explicitly provided in the text, compare and use that duration to confirm or adjust end date/time if needed. The flight time should be exactly the same.
+
+If text is not a flight itinerary, extract text normally.
+
 If a date is relative (e.g., "next Monday," "tomorrow"), assume the current date is {current_date} for resolving it.
-
-The user's timezone is {user_timezone}. When processing times and dates, consider this timezone for proper interpretation of local times mentioned in the text.
-
-If text is a travel itinerary when sometimes arrival time is early than departure time due to timezone, convert all times to the user's timezone ({user_timezone}) for consistency. Always ensure end times are after start times by properly accounting for timezone differences and date changes. Calculate flight duration based on actual timezone-adjusted times. Return the time and dates in the format specified above. If text includes traveler's names, include them in the event name.
 
 Provide the output as a JSON object with a "events" key containing a list, where each object in the list represents an event with keys: "event_name", "event_description", "start_date", "start_time", "end_date", "end_time", "location". If a piece of information is not found, use null for its value.
 
@@ -189,14 +202,40 @@ def validate_and_clean_event(event_data):
     except ValueError:
         raise ValueError("Invalid date format")
     
-    # Validate times
+    # Validate and normalize times
+    def normalize_time(time_str):
+        if not time_str:
+            return None
+        
+        time_str = str(time_str).strip()
+        if not time_str:
+            return None
+            
+        # Try multiple time formats
+        time_formats = [
+            '%H:%M',      # 14:30
+            '%I:%M %p',   # 2:30 PM
+            '%I:%M%p',    # 2:30PM
+            '%H:%M:%S',   # 14:30:00
+            '%I:%M:%S %p' # 2:30:00 PM
+        ]
+        
+        for fmt in time_formats:
+            try:
+                parsed_time = datetime.strptime(time_str, fmt)
+                return parsed_time.strftime('%H:%M')  # Always return in 24-hour format
+            except ValueError:
+                continue
+        
+        # If no format matches, log the problematic value and raise error
+        logger.error(f"Unable to parse time format: '{time_str}' - tried formats: {time_formats}")
+        raise ValueError(f"Unable to parse time format: {time_str}")
+    
     try:
-        if cleaned['start_time']:
-            datetime.strptime(cleaned['start_time'], '%H:%M')
-        if cleaned['end_time']:
-            datetime.strptime(cleaned['end_time'], '%H:%M')
-    except ValueError:
-        raise ValueError("Invalid time format")
+        cleaned['start_time'] = normalize_time(cleaned['start_time'])
+        cleaned['end_time'] = normalize_time(cleaned['end_time'])
+    except ValueError as e:
+        raise ValueError(f"Invalid time format: {str(e)}")
     
     # If end_date is not specified, use start_date
     if cleaned['start_date'] and not cleaned['end_date']:
