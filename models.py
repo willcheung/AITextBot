@@ -26,8 +26,10 @@ class Event(db.Model):
     event_description = db.Column(db.Text)
     start_date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time)
+    start_datetime = db.Column(db.String(100))  # RFC3339 datetime string
     end_date = db.Column(db.Date)
     end_time = db.Column(db.Time)
+    end_datetime = db.Column(db.String(100))  # RFC3339 datetime string
     location = db.Column(db.String(500))
     
     # Google Calendar integration

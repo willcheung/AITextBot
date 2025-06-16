@@ -108,6 +108,10 @@ def extract_events():
                     if cleaned_event['end_time']:
                         event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
                     
+                    # Store RFC3339 datetime strings for Google Calendar
+                    event.start_datetime = cleaned_event['start_datetime']
+                    event.end_datetime = cleaned_event['end_datetime']
+                    
                     event.location = cleaned_event['location']
                     
                     db.session.add(event)
@@ -141,14 +145,12 @@ def extract_events():
                 synced_count = 0
                 for event in created_events:
                     try:
-                        # Prepare event data for Google Calendar
+                        # Prepare event data for Google Calendar using combined datetime fields
                         event_data = {
                             'event_name': event.event_name,
                             'event_description': event.event_description,
-                            'start_date': event.start_date.strftime('%Y-%m-%d') if event.start_date else None,
-                            'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
-                            'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
-                            'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
+                            'start_datetime': event.start_datetime,
+                            'end_datetime': event.end_datetime,
                             'location': event.location
                         }
                         
