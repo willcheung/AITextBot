@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 import re
 
-# the newest OpenAI model is "gpt-4.1-mini" which was released May 13, 2024.
+# the newest OpenAI model is "gpt-4.1".
 # do not change this unless explicitly requested by the user
 from openai import OpenAI
 import sentry_sdk
@@ -73,7 +73,7 @@ Text: '''{text}'''"""
         logger.info(f"Extracting events from text of length {len(text)}")
 
         response = openai.chat.completions.create(
-            model="gpt-4.1-mini",
+            model="gpt-4.1",
             messages=[{
                 "role":
                 "system",
@@ -122,7 +122,7 @@ Text: '''{text}'''"""
 
                 try:
                     response = openai.chat.completions.create(
-                        model="gpt-4.1-mini",
+                        model="gpt-4.1",
                         messages=[{
                             "role":
                             "system",
@@ -206,10 +206,8 @@ def validate_and_clean_event(event_data):
                                         ''),
         'start_date': event_data.get('start_date'),
         'start_time': event_data.get('start_time'),
-        'start_datetime': event_data.get('start_datetime'),
         'end_date': event_data.get('end_date'),
         'end_time': event_data.get('end_time'),
-        'end_datetime': event_data.get('end_datetime'),
         'location': safe_strip(event_data.get('location'), '')
     }
 
@@ -259,6 +257,22 @@ def validate_and_clean_event(event_data):
         cleaned['end_time'] = normalize_time(cleaned['end_time'])
     except ValueError as e:
         raise ValueError(f"Invalid time format: {str(e)}")
+
+    # Validate RFC3339 datetime strings if present
+    def validate_rfc3339_datetime(dt_str):
+        if not dt_str:
+            return None
+        try:
+            # Basic validation - ensure it looks like an RFC3339 datetime
+            if 'T' in str(dt_str) and ('+' in str(dt_str) or '-' in str(dt_str)[-6:]):
+                return str(dt_str).strip()
+            return None
+        except Exception:
+            return None
+
+    # Validate datetime fields
+    cleaned['start_datetime'] = validate_rfc3339_datetime(cleaned.get('start_datetime'))
+    cleaned['end_datetime'] = validate_rfc3339_datetime(cleaned.get('end_datetime'))
 
     # If end_date is not specified, use start_date
     if cleaned['start_date'] and not cleaned['end_date']:

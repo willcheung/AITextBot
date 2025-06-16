@@ -109,8 +109,8 @@ def extract_events():
                         event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
                     
                     # Store RFC3339 datetime strings for Google Calendar
-                    event.start_datetime = cleaned_event['start_datetime']
-                    event.end_datetime = cleaned_event['end_datetime']
+                    event.start_datetime = cleaned_event.get('start_datetime')
+                    event.end_datetime = cleaned_event.get('end_datetime')
                     
                     event.location = cleaned_event['location']
                     
