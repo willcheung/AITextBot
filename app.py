@@ -46,19 +46,35 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for 
 # configure the database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
+    "pool_recycle": 280,
     "pool_pre_ping": True,
-    "pool_timeout": 20,
-    "pool_size": 5,
-    "max_overflow": 10,
+    "pool_timeout": 30,
+    "pool_size": 10,
+    "max_overflow": 20,
     "connect_args": {
-        "connect_timeout": 10,
-        "sslmode": "prefer"
+        "connect_timeout": 30,
+        "sslmode": "require",
+        "application_name": "calendar_ai"
     }
 }
 
 # initialize the app with the extension, flask-sqlalchemy >= 3.0.x
 db.init_app(app)
+
+# Database health check function
+def check_db_connection():
+    """Check if database connection is healthy and attempt to reconnect if needed"""
+    try:
+        db.session.execute(db.text('SELECT 1'))
+        return True
+    except Exception as e:
+        logger.warning(f"Database connection check failed: {str(e)}")
+        try:
+            db.session.rollback()
+            db.session.close()
+        except Exception:
+            pass
+        return False
 
 # Initialize Flask-Login
 login_manager = LoginManager()

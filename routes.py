@@ -124,19 +124,28 @@ def extract_events():
                     flash(f"Skipped one event due to formatting issue: {str(e)}", "warning")
                     continue
             
-            # Commit all events with retry logic
+            # Commit all events with enhanced retry logic
             for attempt in range(3):
                 try:
                     db.session.commit()
                     break
                 except Exception as commit_error:
                     logger.warning(f"Commit error on attempt {attempt + 1}: {str(commit_error)}")
-                    db.session.rollback()
+                    try:
+                        db.session.rollback()
+                    except Exception as rollback_error:
+                        logger.error(f"Rollback failed: {str(rollback_error)}")
+                        # Close the session if rollback fails
+                        try:
+                            db.session.close()
+                        except Exception:
+                            pass
+                    
                     if attempt == 2:
                         sentry_sdk.capture_exception(commit_error)
                         flash("Failed to save events to database. Please try again.", "error")
                         return redirect(url_for("main_routes.dashboard"))
-                    time.sleep(1)
+                    time.sleep(2 ** attempt)  # Exponential backoff
             
             if created_events:
                 logger.info(f"Successfully created {len(created_events)} events")
