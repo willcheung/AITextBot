@@ -1,0 +1,85 @@
+
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - Calendar AI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="mb-4">Terms of Service</h1>
+                    <p class="text-muted">Last updated: {{ moment().format('MMMM DD, YYYY') }}</p>
+
+                    <h2>1. Acceptance of Terms</h2>
+                    <p>By accessing and using Calendar AI ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
+
+                    <h2>2. Description of Service</h2>
+                    <p>Calendar AI is a web-based application that uses artificial intelligence to extract calendar events from text input and synchronize them with Google Calendar. The Service includes text processing, event extraction, calendar integration, and related features.</p>
+
+                    <h2>3. User Accounts</h2>
+                    <p>To use the Service, you must:</p>
+                    <ul>
+                        <li>Have a valid Google account</li>
+                        <li>Provide accurate and complete information</li>
+                        <li>Maintain the security of your account credentials</li>
+                        <li>Be at least 13 years old</li>
+                    </ul>
+
+                    <h2>4. Acceptable Use</h2>
+                    <p>You agree not to use the Service to:</p>
+                    <ul>
+                        <li>Upload or process illegal, harmful, or inappropriate content</li>
+                        <li>Violate any applicable laws or regulations</li>
+                        <li>Infringe on intellectual property rights</li>
+                        <li>Attempt to gain unauthorized access to our systems</li>
+                        <li>Interfere with or disrupt the Service</li>
+                        <li>Use the Service for commercial purposes without permission</li>
+                    </ul>
+
+                    <h2>5. Privacy and Data</h2>
+                    <p>Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the Service, to understand our practices.</p>
+
+                    <h2>6. Google Calendar Integration</h2>
+                    <p>The Service integrates with Google Calendar through official Google APIs. By using this feature, you also agree to Google's Terms of Service and Privacy Policy. We only access calendar data necessary to provide the Service.</p>
+
+                    <h2>7. Intellectual Property</h2>
+                    <p>The Service and its original content, features, and functionality are owned by Calendar AI and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
+
+                    <h2>8. User Content</h2>
+                    <p>You retain ownership of any text or content you submit to the Service. By submitting content, you grant us a non-exclusive, worldwide, royalty-free license to use, process, and analyze your content solely to provide the Service.</p>
+
+                    <h2>9. Service Availability</h2>
+                    <p>We strive to maintain high availability but do not guarantee uninterrupted access to the Service. We may temporarily suspend the Service for maintenance, updates, or other operational reasons.</p>
+
+                    <h2>10. Limitation of Liability</h2>
+                    <p>The Service is provided "as is" without warranties of any kind. We shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.</p>
+
+                    <h2>11. Indemnification</h2>
+                    <p>You agree to indemnify and hold harmless Calendar AI from any claims, damages, losses, or expenses arising from your use of the Service or violation of these Terms.</p>
+
+                    <h2>12. Termination</h2>
+                    <p>We may terminate or suspend your access to the Service immediately, without prior notice, if you breach these Terms. You may also terminate your account at any time by contacting us.</p>
+
+                    <h2>13. Changes to Terms</h2>
+                    <p>We reserve the right to modify these Terms at any time. We will notify users of significant changes via email or through the Service. Continued use after changes constitutes acceptance of the new Terms.</p>
+
+                    <h2>14. Governing Law</h2>
+                    <p>These Terms shall be governed by and construed in accordance with the laws of the jurisdiction where Calendar AI operates, without regard to conflict of law provisions.</p>
+
+                    <h2>15. Contact Information</h2>
+                    <p>If you have any questions about these Terms of Service, please contact us through our support channels.</p>
+
+                    <div class="mt-5">
+                        <a href="{{ url_for('main_routes.index') }}" class="btn btn-primary">
+                            <i data-feather="arrow-left" class="me-2"></i>
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

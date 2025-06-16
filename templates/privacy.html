@@ -1,0 +1,152 @@
+
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - Calendar AI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="mb-4">Privacy Policy</h1>
+                    <p class="text-muted">Last updated: {{ moment().format('MMMM DD, YYYY') }}</p>
+
+                    <h2>1. Introduction</h2>
+                    <p>Calendar AI ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.</p>
+
+                    <h2>2. Information We Collect</h2>
+                    
+                    <h3>2.1 Personal Information</h3>
+                    <p>When you use our Service, we may collect:</p>
+                    <ul>
+                        <li>Google account information (name, email address, profile picture)</li>
+                        <li>Timezone and location preferences</li>
+                        <li>Account preferences and settings</li>
+                    </ul>
+
+                    <h3>2.2 Content Data</h3>
+                    <p>We process the text content you submit to extract calendar events, including:</p>
+                    <ul>
+                        <li>Text input for event extraction</li>
+                        <li>Generated calendar events (dates, times, descriptions, locations)</li>
+                        <li>Calendar synchronization data</li>
+                    </ul>
+
+                    <h3>2.3 Usage Information</h3>
+                    <p>We automatically collect certain information about your use of the Service:</p>
+                    <ul>
+                        <li>Log data (IP address, browser type, pages visited)</li>
+                        <li>Device information (device type, operating system)</li>
+                        <li>Usage patterns and feature interactions</li>
+                    </ul>
+
+                    <h2>3. How We Use Your Information</h2>
+                    <p>We use the collected information to:</p>
+                    <ul>
+                        <li>Provide and improve the Service</li>
+                        <li>Process text and extract calendar events using AI</li>
+                        <li>Synchronize events with your Google Calendar</li>
+                        <li>Authenticate and manage your account</li>
+                        <li>Send important Service-related communications</li>
+                        <li>Analyze usage patterns to improve functionality</li>
+                        <li>Ensure security and prevent fraud</li>
+                    </ul>
+
+                    <h2>4. Google Calendar Integration</h2>
+                    <p>Our Service integrates with Google Calendar through official Google APIs. We only request the minimum necessary permissions:</p>
+                    <ul>
+                        <li>Read your Google account profile information</li>
+                        <li>Create and manage calendar events you create through our Service</li>
+                    </ul>
+                    <p>We do not access, read, or modify existing calendar events that were not created through our Service.</p>
+
+                    <h2>5. AI and Data Processing</h2>
+                    <p>We use OpenAI's services to process text and extract calendar events. When you submit text:</p>
+                    <ul>
+                        <li>Your text is sent to OpenAI for processing</li>
+                        <li>OpenAI's data usage policies apply to this processing</li>
+                        <li>We do not store your raw text input permanently</li>
+                        <li>Only extracted event data is retained</li>
+                    </ul>
+
+                    <h2>6. Data Sharing and Disclosure</h2>
+                    <p>We do not sell, trade, or rent your personal information. We may share information only in these circumstances:</p>
+                    <ul>
+                        <li>With your explicit consent</li>
+                        <li>With service providers who assist in operating the Service (Google, OpenAI)</li>
+                        <li>When required by law or legal process</li>
+                        <li>To protect our rights, property, or safety</li>
+                        <li>In connection with a business transfer or merger</li>
+                    </ul>
+
+                    <h2>7. Data Retention</h2>
+                    <p>We retain your information for as long as necessary to provide the Service:</p>
+                    <ul>
+                        <li>Account information: Until you delete your account</li>
+                        <li>Event data: Until you delete specific events or your account</li>
+                        <li>Usage logs: Up to 90 days for security and analytics</li>
+                        <li>Text input: Not permanently stored after processing</li>
+                    </ul>
+
+                    <h2>8. Data Security</h2>
+                    <p>We implement appropriate security measures to protect your information:</p>
+                    <ul>
+                        <li>Encryption in transit and at rest</li>
+                        <li>Secure authentication protocols</li>
+                        <li>Regular security assessments</li>
+                        <li>Access controls and monitoring</li>
+                    </ul>
+
+                    <h2>9. Your Rights and Choices</h2>
+                    <p>You have several rights regarding your personal information:</p>
+                    <ul>
+                        <li>Access: Request a copy of your personal data</li>
+                        <li>Correction: Update or correct inaccurate information</li>
+                        <li>Deletion: Delete your account and associated data</li>
+                        <li>Portability: Export your calendar events</li>
+                        <li>Objection: Opt out of certain data processing activities</li>
+                    </ul>
+
+                    <h2>10. Cookies and Tracking</h2>
+                    <p>We use essential cookies and similar technologies to:</p>
+                    <ul>
+                        <li>Maintain your login session</li>
+                        <li>Remember your preferences</li>
+                        <li>Ensure security and prevent fraud</li>
+                        <li>Analyze Service usage (anonymized)</li>
+                    </ul>
+
+                    <h2>11. Third-Party Services</h2>
+                    <p>Our Service integrates with third-party services:</p>
+                    <ul>
+                        <li><strong>Google:</strong> For authentication and calendar integration</li>
+                        <li><strong>OpenAI:</strong> For AI-powered text processing</li>
+                        <li><strong>Hosting providers:</strong> For Service infrastructure</li>
+                    </ul>
+                    <p>These services have their own privacy policies that govern their use of your data.</p>
+
+                    <h2>12. International Data Transfers</h2>
+                    <p>Your information may be processed and stored in countries other than your own. We ensure appropriate safeguards are in place to protect your data during international transfers.</p>
+
+                    <h2>13. Children's Privacy</h2>
+                    <p>Our Service is not intended for children under 13. We do not knowingly collect personal information from children under 13. If we discover such information, we will delete it promptly.</p>
+
+                    <h2>14. Changes to This Privacy Policy</h2>
+                    <p>We may update this Privacy Policy periodically. We will notify you of significant changes via email or through the Service. Your continued use of the Service after changes become effective constitutes acceptance of the updated policy.</p>
+
+                    <h2>15. Contact Us</h2>
+                    <p>If you have questions about this Privacy Policy or our data practices, please contact us through our support channels. We will respond to your inquiry within a reasonable timeframe.</p>
+
+                    <div class="mt-5">
+                        <a href="{{ url_for('main_routes.index') }}" class="btn btn-primary">
+                            <i data-feather="arrow-left" class="me-2"></i>
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
