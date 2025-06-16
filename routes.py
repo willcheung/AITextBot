@@ -149,10 +149,23 @@ def extract_events():
                         event_data = {
                             'event_name': event.event_name,
                             'event_description': event.event_description,
-                            'start_datetime': event.start_datetime,
-                            'end_datetime': event.end_datetime,
                             'location': event.location
                         }
+                        
+                        # Use datetime fields if available, otherwise fall back to separate date/time
+                        if event.start_datetime and event.end_datetime:
+                            event_data['start_datetime'] = event.start_datetime
+                            event_data['end_datetime'] = event.end_datetime
+                        else:
+                            # Fallback to separate date/time fields
+                            if event.start_date:
+                                event_data['start_date'] = event.start_date.strftime('%Y-%m-%d')
+                            if event.start_time:
+                                event_data['start_time'] = event.start_time.strftime('%H:%M')
+                            if event.end_date:
+                                event_data['end_date'] = event.end_date.strftime('%Y-%m-%d')
+                            if event.end_time:
+                                event_data['end_time'] = event.end_time.strftime('%H:%M')
                         
                         # Create event in Google Calendar
                         google_event_id = create_calendar_event(current_user, event_data)
@@ -267,12 +280,22 @@ def update_event(event_id):
                 event_data = {
                     'event_name': event.event_name,
                     'event_description': event.event_description,
-                    'start_date': event.start_date.strftime('%Y-%m-%d'),
-                    'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
-                    'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
-                    'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
                     'location': event.location
                 }
+                
+                # Use datetime fields if available, otherwise fall back to separate date/time
+                if event.start_datetime and event.end_datetime:
+                    event_data['start_datetime'] = event.start_datetime
+                    event_data['end_datetime'] = event.end_datetime
+                else:
+                    # Fallback to separate date/time fields
+                    event_data['start_date'] = event.start_date.strftime('%Y-%m-%d')
+                    if event.start_time:
+                        event_data['start_time'] = event.start_time.strftime('%H:%M')
+                    if event.end_date:
+                        event_data['end_date'] = event.end_date.strftime('%Y-%m-%d')
+                    if event.end_time:
+                        event_data['end_time'] = event.end_time.strftime('%H:%M')
                 
                 if update_calendar_event(current_user, event.google_event_id, event_data):
                     flash("Event updated successfully in both database and Google Calendar!", "success")
@@ -306,12 +329,19 @@ def sync_to_calendar(event_id):
         event_data = {
             'event_name': event.event_name,
             'event_description': event.event_description,
-            'start_date': event.start_date.strftime('%Y-%m-%d'),
-            'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
-            'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
-            'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
             'location': event.location
         }
+        
+        # Use datetime fields if available, otherwise fall back to separate date/time
+        if event.start_datetime and event.end_datetime:
+            event_data['start_datetime'] = event.start_datetime
+            event_data['end_datetime'] = event.end_datetime
+        else:
+            # Fallback to separate date/time fields
+            event_data['start_date'] = event.start_date.strftime('%Y-%m-%d')
+            event_data['start_time'] = event.start_time.strftime('%H:%M') if event.start_time else None
+            event_data['end_date'] = event.end_date.strftime('%Y-%m-%d') if event.end_date else None
+            event_data['end_time'] = event.end_time.strftime('%H:%M') if event.end_time else None
         
         google_event_id = create_calendar_event(current_user, event_data)
         

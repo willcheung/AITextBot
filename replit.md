@@ -129,6 +129,9 @@ Preferred communication style: Simple, everyday language.
   - Improved time format validation to handle multiple AI-generated time formats
   - Added combined datetime fields for direct Google Calendar API integration
   - Updated database schema to support RFC3339 datetime strings
+  - Fixed double confirmation alerts for event deletion
+  - Enhanced auto-sync functionality to properly use datetime fields
+  - Unified event sync logic across auto-sync, manual sync, and edit operations
 - June 14, 2025: 
   - Added comprehensive error handling with Sentry logging service integration
   - Implemented dedicated "Textbot" calendar creation and management

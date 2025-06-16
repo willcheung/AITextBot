@@ -40,10 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Confirm delete actions
-    const deleteButtons = document.querySelectorAll('button[title*="Delete"], button[onclick*="confirm"]');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('Are you sure you want to delete this item?')) {
+    const deleteForms = document.querySelectorAll('.delete-form');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to delete this event?')) {
                 e.preventDefault();
                 return false;
             }
