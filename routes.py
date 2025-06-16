@@ -339,9 +339,12 @@ def sync_to_calendar(event_id):
         else:
             # Fallback to separate date/time fields
             event_data['start_date'] = event.start_date.strftime('%Y-%m-%d')
-            event_data['start_time'] = event.start_time.strftime('%H:%M') if event.start_time else None
-            event_data['end_date'] = event.end_date.strftime('%Y-%m-%d') if event.end_date else None
-            event_data['end_time'] = event.end_time.strftime('%H:%M') if event.end_time else None
+            if event.start_time:
+                event_data['start_time'] = event.start_time.strftime('%H:%M')
+            if event.end_date:
+                event_data['end_date'] = event.end_date.strftime('%Y-%m-%d')
+            if event.end_time:
+                event_data['end_time'] = event.end_time.strftime('%H:%M')
         
         google_event_id = create_calendar_event(current_user, event_data)
         
