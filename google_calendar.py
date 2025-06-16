@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 def check_user_has_calendar_scope(user):
     """
     Check if user has granted the required Google Calendar scope.
+    First refreshes the token to ensure we have the latest scope information.
     
     Args:
         user: User object with google_token
@@ -24,6 +25,14 @@ def check_user_has_calendar_scope(user):
         return False
     
     try:
+        # First, try to refresh the token to get the latest scope information
+        try:
+            refresh_google_token(user)
+            logger.info("Token refreshed successfully before scope check")
+        except Exception as refresh_error:
+            logger.warning(f"Token refresh failed, proceeding with existing token: {str(refresh_error)}")
+            # Continue with existing token if refresh fails
+        
         token_data = json.loads(user.google_token)
         access_token = token_data.get('access_token')
         
@@ -40,9 +49,12 @@ def check_user_has_calendar_scope(user):
             token_info = test_response.json()
             scope = token_info.get('scope', '')
             # Check if the token has calendar scope
-            return 'calendar' in scope
-        
-        return False
+            has_scope = 'calendar' in scope
+            logger.info(f"Scope check result: {has_scope}, available scopes: {scope}")
+            return has_scope
+        else:
+            logger.warning(f"Token info request failed with status {test_response.status_code}")
+            return False
         
     except Exception as e:
         logger.error(f"Error checking calendar scope: {str(e)}")
