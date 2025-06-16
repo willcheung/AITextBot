@@ -10,6 +10,44 @@ logger = logging.getLogger(__name__)
 
 # Database-stored calendar IDs replace caching for better reliability
 
+def check_user_has_calendar_scope(user):
+    """
+    Check if user has granted the required Google Calendar scope.
+    
+    Args:
+        user: User object with google_token
+    
+    Returns:
+        bool: True if user has calendar scope, False otherwise
+    """
+    if not user.google_token:
+        return False
+    
+    try:
+        token_data = json.loads(user.google_token)
+        access_token = token_data.get('access_token')
+        
+        if not access_token:
+            return False
+        
+        # Check token info to see if it has calendar scope
+        test_response = requests.get(
+            f'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}',
+            timeout=10
+        )
+        
+        if test_response.status_code == 200:
+            token_info = test_response.json()
+            scope = token_info.get('scope', '')
+            # Check if the token has calendar scope
+            return 'calendar' in scope
+        
+        return False
+        
+    except Exception as e:
+        logger.error(f"Error checking calendar scope: {str(e)}")
+        return False
+
 def refresh_google_token(user):
     """
     Refresh Google OAuth token if needed.

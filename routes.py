@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from app import db
 from models import User, Event, TextInput
 from event_extractor import extract_events_from_text, validate_and_clean_event
-from google_calendar import create_calendar_event, update_calendar_event, delete_calendar_event
+from google_calendar import create_calendar_event, update_calendar_event, delete_calendar_event, check_user_has_calendar_scope
 from datetime import datetime
 import sentry_sdk
 
@@ -26,7 +26,10 @@ def dashboard():
     events = Event.query.filter_by(user_id=current_user.id).order_by(Event.created_at.desc()).all()
     text_inputs = TextInput.query.filter_by(user_id=current_user.id).order_by(TextInput.created_at.desc()).limit(10).all()
     
-    return render_template("dashboard.html", events=events, text_inputs=text_inputs)
+    # Check if user has granted calendar scope
+    has_calendar_scope = check_user_has_calendar_scope(current_user)
+    
+    return render_template("dashboard.html", events=events, text_inputs=text_inputs, has_calendar_scope=has_calendar_scope)
 
 @main_routes.route("/extract_events", methods=["POST"])
 @login_required
