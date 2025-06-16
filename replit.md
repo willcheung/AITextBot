@@ -126,6 +126,9 @@ Preferred communication style: Simple, everyday language.
   - Fixed PostgreSQL SSL connection issues by adjusting database configuration
   - Added comprehensive error logging throughout application for better debugging
   - Enhanced event extraction with user timezone parameter for better time handling
+  - Improved time format validation to handle multiple AI-generated time formats
+  - Added combined datetime fields for direct Google Calendar API integration
+  - Updated database schema to support RFC3339 datetime strings
 - June 14, 2025: 
   - Added comprehensive error handling with Sentry logging service integration
   - Implemented dedicated "Textbot" calendar creation and management

@@ -192,26 +192,33 @@ def create_calendar_event(user, event_data):
         # Get or create the Textbot calendar
         calendar_id = get_or_create_textbot_calendar(user, access_token)
         
-        # Prepare event data for Google Calendar API
-        start_datetime = event_data['start_date']
-        end_datetime = event_data.get('end_date', event_data['start_date'])
-        
-        # Add time if specified
-        if event_data.get('start_time'):
-            start_datetime += f"T{event_data['start_time']}:00"
+        # Use combined datetime fields if available, otherwise fall back to separate date/time
+        if event_data.get('start_datetime') and event_data.get('end_datetime'):
+            start_datetime = event_data['start_datetime']
+            end_datetime = event_data['end_datetime']
+            logger.info(f"Using combined datetime fields: start={start_datetime}, end={end_datetime}")
         else:
-            start_datetime += "T09:00:00"  # Default to 9 AM
-        
-        if event_data.get('end_time'):
-            end_datetime += f"T{event_data['end_time']}:00"
-        else:
-            # Default to 1 hour duration if no end time specified
+            # Fallback to separate date/time fields for backward compatibility
+            start_datetime = event_data['start_date']
+            end_datetime = event_data.get('end_date', event_data['start_date'])
+            
+            # Add time if specified
             if event_data.get('start_time'):
-                start_time = datetime.strptime(event_data['start_time'], '%H:%M')
-                end_time = start_time + timedelta(hours=1)
-                end_datetime += f"T{end_time.strftime('%H:%M')}:00"
+                start_datetime += f"T{event_data['start_time']}:00"
             else:
-                end_datetime += "T10:00:00"  # Default to 10 AM
+                start_datetime += "T09:00:00"  # Default to 9 AM
+            
+            if event_data.get('end_time'):
+                end_datetime += f"T{event_data['end_time']}:00"
+            else:
+                # Default to 1 hour duration if no end time specified
+                if event_data.get('start_time'):
+                    start_time = datetime.strptime(event_data['start_time'], '%H:%M')
+                    end_time = start_time + timedelta(hours=1)
+                    end_datetime += f"T{end_time.strftime('%H:%M')}:00"
+                else:
+                    end_datetime += "T10:00:00"  # Default to 10 AM
+            logger.info(f"Using separate date/time fields: start={start_datetime}, end={end_datetime}")
         
         # Create the calendar event
         calendar_event = {
