@@ -11,7 +11,7 @@
             <div class="alert alert-warning d-flex align-items-center mb-4" role="alert" data-calendar-banner="true">
                 <div class="flex-grow-1">
                     <i data-feather="calendar" class="me-2"></i>
-                    <strong>Calendar Integration Required:</strong> Please grant Google Calendar access to sync your events automatically.
+                    <strong>Calendar Integration Required:</strong> Please grant Google Calendar access to sync your events.
                 </div>
                 <div class="ms-3">
                     <a href="#" class="google-signin-btn" onclick="startGoogleLogin(); return false;">
@@ -36,12 +36,6 @@
                     <h1>Welcome, {{ current_user.username }}!</h1>
                     <p class="text-muted">Extract events from text and sync to your Google Calendar</p>
                 </div>
-                <!--<div>
-                    <a href="#" onclick="startGoogleLogin(); return false;" class="btn btn-outline-primary">
-                        <i data-feather="refresh-cw" class="me-2"></i>
-                        Sync with Google
-                    </a>
-                </div>-->
             </div>
         </div>
     </div>
