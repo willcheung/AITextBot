@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Auto-dismiss alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+    // Auto-dismiss alerts after 5 seconds (except calendar permission banner)
+    const alerts = document.querySelectorAll('.alert:not(.alert-permanent):not([data-calendar-banner])');
     alerts.forEach(alert => {
         setTimeout(() => {
             if (alert.parentNode) {
