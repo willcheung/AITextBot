@@ -1,5 +1,7 @@
 import logging
 import time
+import html
+import re
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app import db
@@ -12,6 +14,40 @@ import sentry_sdk
 logger = logging.getLogger(__name__)
 
 main_routes = Blueprint("main_routes", __name__)
+
+def sanitize_text_for_db(text):
+    """
+    Sanitize text input before saving to database to prevent PostgreSQL conflicts.
+    
+    Args:
+        text (str): Original text input
+        
+    Returns:
+        str: Sanitized text safe for database storage
+    """
+    if not text:
+        return text
+    
+    # HTML escape to prevent script injection
+    sanitized = html.escape(text)
+    
+    # Remove or escape PostgreSQL special characters that could cause issues
+    # Replace null bytes which PostgreSQL doesn't allow
+    sanitized = sanitized.replace('\x00', '')
+    
+    # Escape single quotes to prevent SQL injection
+    sanitized = sanitized.replace("'", "''")
+    
+    # Remove or replace other potentially problematic characters
+    # Remove control characters except common whitespace
+    sanitized = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', sanitized)
+    
+    # Limit length to prevent excessive database storage (adjust as needed)
+    max_length = 50000  # 50KB limit
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length] + "... [truncated]"
+    
+    return sanitized
 
 @main_routes.route("/health")
 def health_check():
@@ -84,7 +120,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
     text = text.strip()
     logger.info(f"User {user.id} processing text of length {len(text)} from {source_type}")
     
-    # Extract events using AI first
+    # Extract events using AI first - use original unsanitized text
     user_timezone = user.timezone if user.timezone else "UTC"
     
     # Retry logic for external API calls
@@ -102,12 +138,16 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
     # Prepare all database objects
     extraction_time = datetime.utcnow()
     
-    # Create TextInput record
+    # Sanitize text for database storage
+    sanitized_text = sanitize_text_for_db(text)
+    sanitized_from_email = sanitize_text_for_db(from_email) if from_email else None
+    
+    # Create TextInput record with sanitized data
     text_input = TextInput()
     text_input.user_id = user.id
-    text_input.original_text = text
+    text_input.original_text = sanitized_text  # Save sanitized version to database
     text_input.source_type = source_type
-    text_input.from_email = from_email
+    text_input.from_email = sanitized_from_email
     text_input.extracted_events = extracted_events
     text_input.processing_status = "completed"
     
@@ -119,8 +159,9 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
             
             event = Event()
             event.user_id = user.id
-            event.event_name = cleaned_event['event_name']
-            event.event_description = cleaned_event['event_description']
+            # Sanitize event data before saving to database
+            event.event_name = sanitize_text_for_db(cleaned_event['event_name'])
+            event.event_description = sanitize_text_for_db(cleaned_event['event_description'])
             event.extracted_at = extraction_time
             
             # Parse dates safely
@@ -136,7 +177,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
             # Store RFC3339 datetime strings for Google Calendar
             event.start_datetime = cleaned_event.get('start_datetime')
             event.end_datetime = cleaned_event.get('end_datetime')
-            event.location = cleaned_event['location']
+            event.location = sanitize_text_for_db(cleaned_event['location'])
             
             created_events.append(event)
             
@@ -295,10 +336,14 @@ def update_event(event_id):
     event = Event.query.filter_by(id=event_id, user_id=current_user.id).first_or_404()
 
     try:
-        # Update event fields
-        event.event_name = request.form.get("event_name", "").strip() or "Untitled Event"
-        event.event_description = request.form.get("event_description", "").strip()
-        event.location = request.form.get("location", "").strip()
+        # Update event fields with sanitization
+        event_name = request.form.get("event_name", "").strip() or "Untitled Event"
+        event_description = request.form.get("event_description", "").strip()
+        location = request.form.get("location", "").strip()
+        
+        event.event_name = sanitize_text_for_db(event_name)
+        event.event_description = sanitize_text_for_db(event_description)
+        event.location = sanitize_text_for_db(location)
 
         # Parse dates and times
         start_date_str = request.form.get("start_date")
