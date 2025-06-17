@@ -84,7 +84,8 @@ Text: '''{text}'''"""
                 "content": prompt
             }],
             response_format={"type": "json_object"},
-            temperature=0.1)
+            temperature=0.1,
+            timeout=25.0)
 
         content = response.choices[0].message.content
         if not content:
@@ -133,7 +134,8 @@ Text: '''{text}'''"""
                             "content": prompt
                         }],
                         response_format={"type": "json_object"},
-                        temperature=0.1)
+                        temperature=0.1,
+                        timeout=25.0)
 
                     retry_content = response.choices[0].message.content
                     if not retry_content:
