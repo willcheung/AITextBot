@@ -157,6 +157,8 @@ def call_openai_api(prompt, sys_prompt):
     Make the actual OpenAI API call.
     Separated for timeout handling.
     """
+    logger.info(sys_prompt)
+    logger.info(prompt)
     response = openai.chat.completions.create(
         model="gpt-4.1-mini",
         messages=[{
