@@ -455,39 +455,3 @@ def terms():
 def privacy():
     """Display Privacy Policy page"""
     return render_template('privacy.html')
-
-
-@main_routes.route("/debug/query")
-@login_required
-def debug_query():
-    """Debug endpoint to query database records"""
-    query = request.args.get('q', '')
-    
-    if not query:
-        return jsonify({"error": "No query provided. Use ?q=your_sql_query"}), 400
-    
-    try:
-        # Only allow SELECT queries for safety
-        if not query.strip().lower().startswith('select'):
-            return jsonify({"error": "Only SELECT queries are allowed"}), 400
-        
-        result = db.session.execute(db.text(query))
-        
-        # Convert result to list of dictionaries
-        rows = []
-        for row in result:
-            if hasattr(row, '_mapping'):
-                rows.append(dict(row._mapping))
-            else:
-                # Fallback for older SQLAlchemy versions
-                rows.append(dict(row))
-        
-        return jsonify({
-            "query": query,
-            "results": rows,
-            "count": len(rows)
-        })
-        
-    except Exception as e:
-        logger.error(f"Database query error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
