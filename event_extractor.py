@@ -63,7 +63,7 @@ Taiwan Taoyuan International Airport (TPE) = Asia/Taipei (UTC+8 year-round))
 
 If text is not a flight itinerary, extract text normally.
 
-If a date is relative (e.g., "next Monday," "tomorrow"), assume the current date is {current_date} for resolving it.
+If a date is relative (e.g., "next Monday," "tomorrow"), first check the email sent date to resolve it. If there's no email sent date, then assume the current date is {current_date} for resolving it.
 
 Provide the output as a JSON object with a "events" key containing a list, where each object in the list represents an event with keys: "event_name", "event_description", "start_date", "start_time", "start_datetime", "end_date", "end_time", "end_datetime", "location". If a piece of information is not found, use null for its value.
 
