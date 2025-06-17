@@ -187,7 +187,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
         user_timezone (str): User's timezone for proper time handling
 
     Returns:
-        tuple: (list of extracted events, from_email, is_offline)
+        tuple: (list of extracted events, from_email, is_offline, openai_status, openai_error)
     """
     if current_date is None:
         current_date = datetime.now().strftime("%Y-%m-%d")
@@ -226,7 +226,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
                 logger.info(
                     f"Successfully extracted {len(events)} events via OpenAI API"
                 )
-                return events, from_email, False
+                return events, from_email, False, "success", None
 
             except FutureTimeoutError:
                 logger.warning(
@@ -237,7 +237,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
 
                 # Use offline extraction
                 events = extract_events_offline(text, from_email)
-                return events, from_email, True
+                return events, from_email, True, "timeout", "OpenAI API call timed out after 5 seconds"
 
     except Exception as e:
         error_msg = str(e)
@@ -249,7 +249,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
             sentry_sdk.capture_message("OpenAI rate limit exceeded",
                                        level="warning")
             events = extract_events_offline(text, from_email)
-            return events, from_email, True
+            return events, from_email, True, "error", f"Rate limit exceeded: {error_msg}"
 
         elif "401" in error_msg or "authentication" in error_msg.lower():
             logger.error(
@@ -257,7 +257,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
             )
             sentry_sdk.capture_exception(e)
             events = extract_events_offline(text, from_email)
-            return events, from_email, True
+            return events, from_email, True, "error", f"Authentication failed: {error_msg}"
 
         elif "400" in error_msg or "invalid" in error_msg.lower():
             logger.error(
@@ -265,7 +265,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
             )
             sentry_sdk.capture_exception(e)
             events = extract_events_offline(text, from_email)
-            return events, from_email, True
+            return events, from_email, True, "error", f"Invalid request: {error_msg}"
 
         elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower(
         ):
@@ -273,7 +273,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
                 "OpenAI API timeout - switching to offline extraction")
             sentry_sdk.capture_exception(e)
             events = extract_events_offline(text, from_email)
-            return events, from_email, True
+            return events, from_email, True, "timeout", f"Request timeout: {error_msg}"
 
         else:
             logger.error(
@@ -281,7 +281,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
             )
             sentry_sdk.capture_exception(e)
             events = extract_events_offline(text, from_email)
-            return events, from_email, True
+            return events, from_email, True, "error", f"Unexpected error: {error_msg}"
 
 
 def validate_and_clean_event(event_data):

@@ -58,6 +58,10 @@ class TextInput(db.Model):
     processing_status = db.Column(db.String(50), default='pending')  # pending, completed, failed
     error_message = db.Column(db.Text)
     
+    # OpenAI API tracking
+    openai_status = db.Column(db.String(50), default='pending')  # pending, success, timeout, error, offline
+    openai_error_message = db.Column(db.Text)  # Specific OpenAI error details
+    
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

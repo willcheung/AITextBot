@@ -124,7 +124,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
     user_timezone = user.timezone if user.timezone else "UTC"
 
     # Call the extraction function with timeout handling
-    extracted_events, from_email, is_offline = extract_events_from_text(text, user_timezone=user_timezone)
+    extracted_events, from_email, is_offline, openai_status, openai_error = extract_events_from_text(text, user_timezone=user_timezone)
 
     # Prepare all database objects
     extraction_time = datetime.utcnow()
@@ -141,6 +141,8 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
     text_input.from_email = sanitized_from_email
     text_input.extracted_events = extracted_events
     text_input.processing_status = "completed"
+    text_input.openai_status = openai_status if openai_status else ("offline" if is_offline else "success")
+    text_input.openai_error_message = openai_error
 
     # Create Event records
     created_events = []
