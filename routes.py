@@ -18,6 +18,34 @@ def health_check():
     """Health check endpoint for deployment"""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}, 200
 
+@main_routes.route("/health/db")
+def db_health_check():
+    """Database health check endpoint"""
+    try:
+        # Test database connection
+        result = db.session.execute(db.text('SELECT 1 as test')).fetchone()
+        
+        # Get some basic stats
+        user_count = db.session.execute(db.text('SELECT COUNT(*) FROM "user"')).scalar()
+        event_count = db.session.execute(db.text('SELECT COUNT(*) FROM event')).scalar()
+        
+        return {
+            "status": "healthy", 
+            "database": "connected",
+            "test_query": result[0] if result else None,
+            "user_count": user_count,
+            "event_count": event_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }, 200
+    except Exception as e:
+        logger.error(f"Database health check failed: {str(e)}")
+        return {
+            "status": "unhealthy", 
+            "database": "disconnected",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }, 500
+
 @main_routes.route("/")
 def index():
     if current_user.is_authenticated:

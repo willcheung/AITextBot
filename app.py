@@ -54,16 +54,17 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 280,
     "pool_pre_ping": True,
-    "pool_timeout": 20,
-    "pool_size": 3,
-    "max_overflow": 5,
+    "pool_timeout": 30,
+    "pool_size": 5,
+    "max_overflow": 10,
     "connect_args": {
-        "connect_timeout": 20,
+        "connect_timeout": 30,
         "sslmode": "require",
         "application_name": "calendar_ai",
         "keepalives_idle": "600",
         "keepalives_interval": "30",
-        "keepalives_count": "3"
+        "keepalives_count": "3",
+        "options": "-c statement_timeout=30000"  # 30 second statement timeout
     }
 }
 
