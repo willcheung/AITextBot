@@ -17,7 +17,12 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET",
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 # Make sure to use this redirect URL. It has to match the one in the whitelist
-DEV_REDIRECT_URL = f'https://{os.environ.get("REPLIT_DEV_DOMAIN", "localhost:5000")}/google_login/callback'
+replit_domain = os.environ.get("REPLIT_DEV_DOMAIN")
+if replit_domain:
+    DEV_REDIRECT_URL = f'https://{replit_domain}/google_login/callback'
+else:
+    # Fallback for local development
+    DEV_REDIRECT_URL = 'http://localhost:5000/google_login/callback'
 
 # ALWAYS display setup instructions to the user:
 print(f"""To make Google authentication work:

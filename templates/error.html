@@ -79,3 +79,35 @@
 }
 </style>
 {% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Error {{ error_code }} - Textbot AI{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-container">
+                <h1 class="display-1">{{ error_code }}</h1>
+                <h2 class="mb-3">Oops! Something went wrong</h2>
+                <p class="text-muted mb-4">{{ error_message }}</p>
+                <a href="{{ url_for('main_routes.index') }}" class="btn btn-primary">
+                    <i data-feather="home" class="me-2"></i>
+                    Go Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    padding: 2rem;
+}
+.display-1 {
+    font-size: 6rem;
+    font-weight: 300;
+    color: var(--primary-color);
+}
+</style>
+{% endblock %}

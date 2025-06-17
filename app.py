@@ -40,20 +40,26 @@ db = SQLAlchemy(model_class=Base)
 
 # create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1) # needed for url_for to generate with https
 
 # configure the database, relative to the app instance folder
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    # Fallback for development
+    database_url = "sqlite:///calendar_ai.db"
+    logger.warning("No DATABASE_URL found, using SQLite fallback")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 280,
     "pool_pre_ping": True,
     "pool_timeout": 30,
-    "pool_size": 10,
-    "max_overflow": 20,
+    "pool_size": 5,
+    "max_overflow": 10,
     "connect_args": {
         "connect_timeout": 30,
-        "sslmode": "require",
+        "sslmode": "prefer",
         "application_name": "calendar_ai"
     }
 }

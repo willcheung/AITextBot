@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 
 main_routes = Blueprint("main_routes", __name__)
 
+@main_routes.route("/health")
+def health_check():
+    """Health check endpoint for deployment"""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}, 200
+
 @main_routes.route("/")
 def index():
     if current_user.is_authenticated:
