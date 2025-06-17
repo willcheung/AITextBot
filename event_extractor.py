@@ -36,7 +36,8 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
     email_match = re.search(r'From:\s*([^\s<]+@[^\s>]+)', text, re.IGNORECASE)
     if email_match:
         from_email = email_match.group(1)
-
+        logger.info(f"Extracted from email: {from_email}")
+    
     prompt = f"""For all text extraction workflow below, retain original language as much as possible. 
 
 Given the following text, extract all event information. For each event, identify:
