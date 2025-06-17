@@ -167,6 +167,7 @@ def refresh_google_token(user):
 def get_or_create_textbot_calendar(user, access_token):
     """
     Get stored Textbot calendar ID or create a new one if needed.
+    Validates existing calendar ID and creates new one if invalid.
 
     Args:
         user: User object with textbot_calendar_id
@@ -177,18 +178,36 @@ def get_or_create_textbot_calendar(user, access_token):
     """
     from app import db
 
-    # Check if user already has a stored calendar ID
-    if user.textbot_calendar_id:
-        logger.info(f"Using stored Textbot calendar ID: {user.textbot_calendar_id}")
-        return user.textbot_calendar_id
-
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Content-Type': 'application/json'
     }
 
+    # Check if user already has a stored calendar ID and validate it
+    if user.textbot_calendar_id:
+        logger.info(f"Validating stored Textbot calendar ID: {user.textbot_calendar_id}")
+        
+        try:
+            # Test if the stored calendar ID is still valid
+            test_response = requests.get(
+                f'https://www.googleapis.com/calendar/v3/calendars/{user.textbot_calendar_id}',
+                headers=headers,
+                timeout=10
+            )
+            
+            if test_response.status_code == 200:
+                logger.info("Stored calendar ID is valid, using it")
+                return user.textbot_calendar_id
+            else:
+                logger.warning(f"Stored calendar ID is invalid (status {test_response.status_code}), will create new calendar")
+                user.textbot_calendar_id = None  # Clear invalid ID
+                
+        except Exception as e:
+            logger.warning(f"Error validating stored calendar ID: {str(e)}, will create new calendar")
+            user.textbot_calendar_id = None  # Clear invalid ID
+
     try:
-        # Create new Textbot calendar since user doesn't have one stored
+        # Create new Textbot calendar since user doesn't have one stored or it's invalid
         logger.info("Creating new Textbot calendar for user")
         calendar_data = {
             'summary': 'Textbot',
