@@ -123,7 +123,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
     # Extract events using AI first - use original unsanitized text
     user_timezone = user.timezone if user.timezone else "UTC"
 
-    # Call the extraction function with timeout handling
+    # Call the extraction function synchronously
     extracted_events, from_email, is_offline, openai_status, openai_error = extract_events_from_text(text, user_timezone=user_timezone)
 
     # Prepare all database objects
@@ -163,7 +163,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
             else:
                 # If no start date provided, use today as default (required by DB schema)
                 event.start_date = datetime.now().date()
-                
+
             if cleaned_event['start_time']:
                 event.start_time = datetime.strptime(cleaned_event['start_time'], '%H:%M').time()
             if cleaned_event['end_date']:
@@ -171,7 +171,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
             else:
                 # If no end date, use start date
                 event.end_date = event.start_date
-                
+
             if cleaned_event['end_time']:
                 event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
 

@@ -1,11 +1,8 @@
 import json
 import os
-import time
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
-import threading
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 # the newest OpenAI model is "gpt-4.1-mini".
 # do not change this unless explicitly requested by the user
@@ -53,135 +50,9 @@ Provide the output as a JSON object with a "events" key containing a list, where
 Text: '''{text}'''"""
 
 
-def extract_events_offline(text, from_email=None):
-    """
-    Offline fallback extraction using basic text parsing.
-    This provides a basic extraction when OpenAI API is unavailable.
-    """
-    logger.info("Using offline extraction fallback")
-
-    events = []
-
-    # Basic pattern matching for common event patterns
-    # Look for date patterns
-    date_patterns = [
-        r'(\w+day),?\s+(\w+)\s+(\d{1,2}),?\s+(\d{4})',  # Monday, January 15, 2024
-        r'(\d{1,2})/(\d{1,2})/(\d{4})',  # 1/15/2024
-        r'(\d{4})-(\d{1,2})-(\d{1,2})',  # 2024-01-15
-    ]
-
-    # Look for time patterns
-    time_patterns = [
-        r'(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)',  # 2:30 PM
-        r'(\d{1,2}):(\d{2})',  # 14:30
-    ]
-
-    # Look for event-like phrases
-    event_patterns = [
-        r'(meeting|conference|appointment|call|interview|lunch|dinner|presentation)',
-        r'(flight|departure|arrival|boarding)',
-        r'(event|workshop|training|seminar)',
-    ]
-
-    # Basic extraction - look for lines with both date/time and event keywords
-    lines = text.split('\n')
-
-    for line in lines:
-        line = line.strip()
-        if len(line) < 10:  # Skip very short lines
-            continue
-
-        # Check if line contains date and event patterns
-        has_date = any(
-            re.search(pattern, line, re.IGNORECASE)
-            for pattern in date_patterns)
-        has_event = any(
-            re.search(pattern, line, re.IGNORECASE)
-            for pattern in event_patterns)
-
-        if has_date or has_event:
-            # Create a basic event
-            event_name = line[:50] + "..." if len(line) > 50 else line
-            if from_email:
-                event_name = f"{event_name} (from {from_email})"
-
-            # Provide default date (today) since database requires start_date
-            today = datetime.now().strftime('%Y-%m-%d')
-            events.append({
-                "event_name": event_name,
-                "event_description": line,
-                "start_date": today,
-                "start_time": None,
-                "start_datetime": None,
-                "end_date": today,
-                "end_time": None,
-                "end_datetime": None,
-                "location": None
-            })
-
-    # If no events found, create a generic one
-    if not events:
-        event_name = "Extracted Event"
-        if from_email:
-            event_name = f"{event_name} (from {from_email})"
-
-        # Provide default date (today) since database requires start_date
-        today = datetime.now().strftime('%Y-%m-%d')
-        events.append({
-            "event_name":
-            event_name,
-            "event_description":
-            text[:200] + "..." if len(text) > 200 else text,
-            "start_date":
-            today,
-            "start_time":
-            None,
-            "start_datetime":
-            None,
-            "end_date":
-            today,
-            "end_time":
-            None,
-            "end_datetime":
-            None,
-            "location":
-            None
-        })
-
-    logger.info(f"Offline extraction created {len(events)} events")
-    return events
-
-
-def call_openai_api(prompt, sys_prompt):
-    """
-    Make the actual OpenAI API call.
-    Separated for timeout handling.
-    """
-    logger.info(sys_prompt)
-    logger.info(prompt)
-    response = openai.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[{
-            "role": "system",
-            "content": sys_prompt
-        }, {
-            "role": "user",
-            "content": prompt
-        }],
-        response_format={"type": "json_object"},
-        temperature=0.1,
-        timeout=25.0)
-
-    content = response.choices[0].message.content
-    if not content:
-        raise Exception("Empty response from AI service")
-
-    return json.loads(content)
-
-
 def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
     """
-    Extract events from text using OpenAI API with timeout and offline fallback.
+    Extract events from text using OpenAI API synchronously.
 
     Args:
         text (str): The input text containing event information
@@ -209,81 +80,46 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
 
     try:
         logger.info(f"Extracting events from text of length {len(text)}")
+        logger.info(sys_prompt)
+        logger.info(prompt)
 
-        # Use ThreadPoolExecutor with timeout to call OpenAI API
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(call_openai_api, prompt, sys_prompt)
-            try:
-                # Wait for 5 seconds maximum
-                result = future.result(timeout=5.0)
-                events = result.get("events", [])
+        # Make synchronous OpenAI API call
+        response = openai.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[{
+                "role": "system",
+                "content": sys_prompt
+            }, {
+                "role": "user",
+                "content": prompt
+            }],
+            response_format={"type": "json_object"},
+            temperature=0.1,
+            timeout=30.0)
 
-                # If text is from email, append from email to event names
-                if from_email:
-                    for event in events:
-                        if event.get("event_name"):
-                            event[
-                                "event_name"] = f"{event['event_name']} (from {from_email})"
+        content = response.choices[0].message.content
+        if not content:
+            raise Exception("Empty response from AI service")
 
-                logger.info(
-                    f"Successfully extracted {len(events)} events via OpenAI API"
-                )
-                return events, from_email, False, "success", None
+        result = json.loads(content)
+        events = result.get("events", [])
 
-            except FutureTimeoutError:
-                logger.warning(
-                    "OpenAI API call timed out after 5 seconds, switching to offline extraction"
-                )
-                # Cancel the future to clean up
-                future.cancel()
+        # If text is from email, append from email to event names
+        if from_email:
+            for event in events:
+                if event.get("event_name"):
+                    event["event_name"] = f"{event['event_name']} (from {from_email})"
 
-                # Use offline extraction
-                events = extract_events_offline(text, from_email)
-                return events, from_email, True, "timeout", "OpenAI API call timed out after 5 seconds"
+        logger.info(f"Successfully extracted {len(events)} events via OpenAI API")
+        return events, from_email, False, "success", None
 
     except Exception as e:
         error_msg = str(e)
         logger.error(f"OpenAI API error: {error_msg}")
+        sentry_sdk.capture_exception(e)
 
-        # Handle specific error types with single notification
-        if "429" in error_msg or "rate_limit" in error_msg.lower():
-            logger.warning("Rate limit hit - switching to offline extraction")
-            sentry_sdk.capture_message("OpenAI rate limit exceeded",
-                                       level="warning")
-            events = extract_events_offline(text, from_email)
-            return events, from_email, True, "error", f"Rate limit exceeded: {error_msg}"
-
-        elif "401" in error_msg or "authentication" in error_msg.lower():
-            logger.error(
-                "OpenAI authentication failed - switching to offline extraction"
-            )
-            sentry_sdk.capture_exception(e)
-            events = extract_events_offline(text, from_email)
-            return events, from_email, True, "error", f"Authentication failed: {error_msg}"
-
-        elif "400" in error_msg or "invalid" in error_msg.lower():
-            logger.error(
-                "Invalid request to OpenAI API - switching to offline extraction"
-            )
-            sentry_sdk.capture_exception(e)
-            events = extract_events_offline(text, from_email)
-            return events, from_email, True, "error", f"Invalid request: {error_msg}"
-
-        elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower(
-        ):
-            logger.error(
-                "OpenAI API timeout - switching to offline extraction")
-            sentry_sdk.capture_exception(e)
-            events = extract_events_offline(text, from_email)
-            return events, from_email, True, "timeout", f"Request timeout: {error_msg}"
-
-        else:
-            logger.error(
-                f"Unexpected OpenAI API error: {error_msg} - switching to offline extraction"
-            )
-            sentry_sdk.capture_exception(e)
-            events = extract_events_offline(text, from_email)
-            return events, from_email, True, "error", f"Unexpected error: {error_msg}"
+        # Re-raise the exception to be handled by the calling function
+        raise Exception(f"Failed to extract events: {error_msg}")
 
 
 def validate_and_clean_event(event_data):
