@@ -64,228 +64,223 @@ def dashboard():
 
     return render_template("dashboard.html", events=events, text_inputs=text_inputs, has_calendar_scope=has_calendar_scope)
 
+def process_text_to_events(text, user, source_type="manual", auto_sync=True):
+    """
+    Core function to process text and extract events.
+    Can be called from web routes, API endpoints, or webhooks.
+    
+    Args:
+        text (str): Text to process
+        user (User): User object
+        source_type (str): Source of the text (manual, api, webhook, email)
+        auto_sync (bool): Whether to auto-sync to Google Calendar
+        
+    Returns:
+        dict: Processing results with events, text_input, and sync status
+    """
+    if not text or not text.strip():
+        raise ValueError("Text input is required")
+    
+    text = text.strip()
+    logger.info(f"User {user.id} processing text of length {len(text)} from {source_type}")
+    
+    # Extract events using AI first
+    user_timezone = user.timezone if user.timezone else "UTC"
+    
+    # Retry logic for external API calls
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            extracted_events, from_email = extract_events_from_text(text, user_timezone=user_timezone)
+            break
+        except Exception as api_error:
+            if attempt == max_retries - 1:
+                raise api_error
+            logger.warning(f"API call attempt {attempt + 1} failed: {str(api_error)}")
+            time.sleep(2 ** attempt)  # Exponential backoff
+    
+    # Prepare all database objects
+    extraction_time = datetime.utcnow()
+    
+    # Create TextInput record
+    text_input = TextInput()
+    text_input.user_id = user.id
+    text_input.original_text = text
+    text_input.source_type = source_type
+    text_input.from_email = from_email
+    text_input.extracted_events = extracted_events
+    text_input.processing_status = "completed"
+    
+    # Create Event records
+    created_events = []
+    for event_data in extracted_events:
+        try:
+            cleaned_event = validate_and_clean_event(event_data)
+            
+            event = Event()
+            event.user_id = user.id
+            event.event_name = cleaned_event['event_name']
+            event.event_description = cleaned_event['event_description']
+            event.extracted_at = extraction_time
+            
+            # Parse dates safely
+            if cleaned_event['start_date']:
+                event.start_date = datetime.strptime(cleaned_event['start_date'], '%Y-%m-%d').date()
+            if cleaned_event['start_time']:
+                event.start_time = datetime.strptime(cleaned_event['start_time'], '%H:%M').time()
+            if cleaned_event['end_date']:
+                event.end_date = datetime.strptime(cleaned_event['end_date'], '%Y-%m-%d').date()
+            if cleaned_event['end_time']:
+                event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
+            
+            # Store RFC3339 datetime strings for Google Calendar
+            event.start_datetime = cleaned_event.get('start_datetime')
+            event.end_datetime = cleaned_event.get('end_datetime')
+            event.location = cleaned_event['location']
+            
+            created_events.append(event)
+            
+        except Exception as e:
+            logger.error(f"Error processing individual event: {str(e)}")
+            logger.error(f"Raw event data: {event_data}")
+            sentry_sdk.capture_exception(e)
+            continue
+    
+    # Save everything to database atomically
+    for attempt in range(3):
+        try:
+            db.session.add(text_input)
+            db.session.flush()  # Get the text_input.id
+            
+            # Link events to text_input
+            for event in created_events:
+                event.text_input_id = text_input.id
+                db.session.add(event)
+            
+            db.session.commit()
+            break
+            
+        except Exception as commit_error:
+            logger.warning(f"Database commit error on attempt {attempt + 1}: {str(commit_error)}")
+            try:
+                db.session.rollback()
+            except Exception as rollback_error:
+                logger.error(f"Rollback failed: {str(rollback_error)}")
+                try:
+                    db.session.close()
+                except Exception:
+                    pass
+            
+            if attempt == 2:
+                sentry_sdk.capture_exception(commit_error)
+                raise Exception("Failed to save events to database after 3 attempts")
+            time.sleep(2 ** attempt)  # Exponential backoff
+    
+    logger.info(f"Successfully saved {len(created_events)} events")
+    
+    # Auto-sync to Google Calendar if requested
+    synced_count = 0
+    if auto_sync and created_events:
+        for event in created_events:
+            try:
+                # Prepare event data for Google Calendar
+                event_data = {
+                    'event_name': event.event_name,
+                    'event_description': event.event_description,
+                    'location': event.location
+                }
+                
+                # Use datetime fields if available, otherwise fall back to separate date/time
+                if event.start_datetime and event.end_datetime:
+                    event_data['start_datetime'] = event.start_datetime
+                    event_data['end_datetime'] = event.end_datetime
+                else:
+                    # Fallback to separate date/time fields
+                    if event.start_date:
+                        event_data['start_date'] = event.start_date.strftime('%Y-%m-%d')
+                    if event.start_time:
+                        event_data['start_time'] = event.start_time.strftime('%H:%M')
+                    if event.end_date:
+                        event_data['end_date'] = event.end_date.strftime('%Y-%m-%d')
+                    if event.end_time:
+                        event_data['end_time'] = event.end_time.strftime('%H:%M')
+                
+                # Create event in Google Calendar
+                google_event_id = create_calendar_event(user, event_data)
+                if google_event_id:
+                    event.google_event_id = google_event_id
+                    event.is_synced = True
+                    synced_count += 1
+                    logger.info(f"Auto-synced event '{event.event_name}' to Google Calendar")
+                    
+            except Exception as sync_error:
+                error_msg = str(sync_error)
+                logger.warning(f"Failed to auto-sync event '{event.event_name}': {error_msg}")
+                
+                # If it's an authentication error, stop trying other events
+                if "sign in" in error_msg.lower() or "authentication" in error_msg.lower():
+                    break
+                continue
+        
+        # Commit sync status updates
+        try:
+            db.session.commit()
+        except Exception as commit_error:
+            logger.error(f"Failed to update sync status: {str(commit_error)}")
+            db.session.rollback()
+    
+    return {
+        'text_input': text_input,
+        'events': created_events,
+        'synced_count': synced_count,
+        'from_email': from_email
+    }
+
+
 @main_routes.route("/extract_events", methods=["POST"])
 @login_required
 def extract_events():
-    text_input = None
     try:
-        logger.info(f"User {current_user.id} starting event extraction")
         text = request.form.get("text", "").strip()
-
+        
         if not text:
             logger.warning(f"User {current_user.id} submitted empty text")
             flash("Please enter some text to extract events from.", "error")
             return redirect(url_for("main_routes.dashboard"))
-
-        # Database operation with retry logic
-        text_input_created = False
-        for attempt in range(3):
-            try:
-                # Save the text input
-                text_input = TextInput()
-                text_input.user_id = current_user.id
-                text_input.original_text = text
-                text_input.source_type = "manual"
-
-                db.session.add(text_input)
-                db.session.commit()
-                text_input_created = True
-                break
-
-            except Exception as db_error:
-                logger.warning(f"Database error on attempt {attempt + 1}: {str(db_error)}")
-                db.session.rollback()
-                text_input = None
-                if attempt == 2:
-                    sentry_sdk.capture_exception(db_error)
-                    flash("Database connection issue. Please try again in a moment.", "error")
-                    return redirect(url_for("main_routes.dashboard"))
-                time.sleep(1)  # Brief delay before retry
-
-        if not text_input_created or text_input is None:
-            flash("Failed to save your text. Please try again.", "error")
-            return redirect(url_for("main_routes.dashboard"))
-
-        try:
-            logger.info("Starting AI event extraction")
-            # Extract events using AI with retry logic
-            user_timezone = current_user.timezone if current_user.timezone else "UTC"
+        
+        # Process text to events
+        result = process_text_to_events(text, current_user, source_type="manual", auto_sync=True)
+        
+        events_count = len(result['events'])
+        synced_count = result['synced_count']
+        
+        if events_count > 0:
+            if synced_count > 0:
+                flash(f"Successfully extracted {events_count} event(s) and synced {synced_count} to your Textbot calendar!", "success")
+            else:
+                flash(f"Successfully extracted {events_count} event(s)! Events are ready for manual sync.", "success")
+        else:
+            flash("No valid events could be extracted from the text.", "warning")
             
-            # Retry logic for external API calls
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    extracted_events, from_email = extract_events_from_text(text, user_timezone=user_timezone)
-                    break
-                except Exception as api_error:
-                    if attempt == max_retries - 1:
-                        raise api_error
-                    logger.warning(f"API call attempt {attempt + 1} failed: {str(api_error)}")
-                    time.sleep(2 ** attempt)  # Exponential backoff
-
-            if from_email and text_input:
-                text_input.from_email = from_email
-
-            if text_input:
-                text_input.extracted_events = extracted_events
-                text_input.processing_status = "completed"
-
-            # Create Event records for each extracted event
-            extraction_time = datetime.utcnow()
-            created_events = []
-            for event_data in extracted_events:
-                try:
-                    cleaned_event = validate_and_clean_event(event_data)
-
-                    event = Event()
-                    event.user_id = current_user.id
-                    if text_input:
-                        event.text_input_id = text_input.id
-                    event.event_name = cleaned_event['event_name']
-                    event.event_description = cleaned_event['event_description']
-                    event.extracted_at = extraction_time
-
-                    # Parse dates safely
-                    if cleaned_event['start_date']:
-                        event.start_date = datetime.strptime(cleaned_event['start_date'], '%Y-%m-%d').date()
-                    if cleaned_event['start_time']:
-                        event.start_time = datetime.strptime(cleaned_event['start_time'], '%H:%M').time()
-                    if cleaned_event['end_date']:
-                        event.end_date = datetime.strptime(cleaned_event['end_date'], '%Y-%m-%d').date()
-                    if cleaned_event['end_time']:
-                        event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
-
-                    # Store RFC3339 datetime strings for Google Calendar
-                    event.start_datetime = cleaned_event.get('start_datetime')
-                    event.end_datetime = cleaned_event.get('end_datetime')
-
-                    event.location = cleaned_event['location']
-
-                    db.session.add(event)
-                    created_events.append(event)
-
-                except Exception as e:
-                    logger.error(f"Error processing individual event: {str(e)}")
-                    logger.error(f"Raw event data: {event_data}")
-                    sentry_sdk.capture_exception(e)
-                    flash(f"Skipped one event due to formatting issue: {str(e)}", "warning")
-                    continue
-
-            # Commit all events with enhanced retry logic
-            for attempt in range(3):
-                try:
-                    db.session.commit()
-                    break
-                except Exception as commit_error:
-                    logger.warning(f"Commit error on attempt {attempt + 1}: {str(commit_error)}")
-                    try:
-                        db.session.rollback()
-                    except Exception as rollback_error:
-                        logger.error(f"Rollback failed: {str(rollback_error)}")
-                        # Close the session if rollback fails
-                        try:
-                            db.session.close()
-                        except Exception:
-                            pass
-
-                    if attempt == 2:
-                        sentry_sdk.capture_exception(commit_error)
-                        flash("Failed to save events to database. Please try again.", "error")
-                        return redirect(url_for("main_routes.dashboard"))
-                    time.sleep(2 ** attempt)  # Exponential backoff
-
-            if created_events:
-                logger.info(f"Successfully created {len(created_events)} events")
-
-                # Auto-sync all extracted events to Google Calendar
-                synced_count = 0
-                for event in created_events:
-                    try:
-                        # Prepare event data for Google Calendar using combined datetime fields
-                        event_data = {
-                            'event_name': event.event_name,
-                            'event_description': event.event_description,
-                            'location': event.location
-                        }
-
-                        # Use datetime fields if available, otherwise fall back to separate date/time
-                        if event.start_datetime and event.end_datetime:
-                            event_data['start_datetime'] = event.start_datetime
-                            event_data['end_datetime'] = event.end_datetime
-                        else:
-                            # Fallback to separate date/time fields
-                            if event.start_date:
-                                event_data['start_date'] = event.start_date.strftime('%Y-%m-%d')
-                            if event.start_time:
-                                event_data['start_time'] = event.start_time.strftime('%H:%M')
-                            if event.end_date:
-                                event_data['end_date'] = event.end_date.strftime('%Y-%m-%d')
-                            if event.end_time:
-                                event_data['end_time'] = event.end_time.strftime('%H:%M')
-
-                        # Create event in Google Calendar
-                        google_event_id = create_calendar_event(current_user, event_data)
-                        if google_event_id:
-                            event.google_event_id = google_event_id
-                            event.is_synced = True
-                            synced_count += 1
-                            logger.info(f"Auto-synced event '{event.event_name}' to Google Calendar")
-
-                    except Exception as sync_error:
-                        error_msg = str(sync_error)
-                        logger.warning(f"Failed to auto-sync event '{event.event_name}': {error_msg}")
-
-                        # If it's an authentication error, provide clear feedback
-                        if "sign in" in error_msg.lower() or "authentication" in error_msg.lower():
-                            flash(f"Google Calendar sync failed: {error_msg}", "warning")
-                            break  # Stop trying other events if auth is broken
-                        # Continue with other events for other types of errors
-                        continue
-
-                # Commit the sync status updates
-                try:
-                    db.session.commit()
-                except Exception as commit_error:
-                    logger.error(f"Failed to update sync status: {str(commit_error)}")
-                    db.session.rollback()
-
-                if synced_count > 0:
-                    flash(f"Successfully extracted {len(created_events)} event(s) and synced {synced_count} to your Textbot calendar!", "success")
-                else:
-                    flash(f"Successfully extracted {len(created_events)} event(s)! Events are ready for manual sync.", "success")
-            else:
-                flash("No valid events could be extracted from the text.", "warning")
-
-        except Exception as e:
-            logger.error(f"Event extraction failed: {str(e)}")
-            sentry_sdk.capture_exception(e)
-
-            # Update text input status
-            if text_input:
-                try:
-                    text_input.processing_status = "failed"
-                    text_input.error_message = str(e)
-                    db.session.commit()
-                except:
-                    db.session.rollback()
-
-            # Show user-friendly error message based on error type
-            error_msg = str(e).lower()
-            if "rate limit" in error_msg or "429" in error_msg:
-                flash("AI service is busy. Please wait a moment and try again.", "error")
-            elif "authentication" in error_msg or "401" in error_msg:
-                flash("AI service authentication issue. Please contact support.", "error")
-            elif "network" in error_msg or "timeout" in error_msg:
-                flash("Network connection issue. Please check your connection and try again.", "error")
-            else:
-                flash("Unable to extract events from the text. Please try rephrasing or shortening your text.", "error")
-
+    except ValueError as ve:
+        logger.warning(f"Validation error for user {current_user.id}: {str(ve)}")
+        flash(str(ve), "error")
+        
     except Exception as e:
-        logger.error(f"Unexpected error in extract_events: {str(e)}", exc_info=True)
+        logger.error(f"Event extraction failed for user {current_user.id}: {str(e)}")
         sentry_sdk.capture_exception(e)
-        db.session.rollback()
-        flash("An unexpected error occurred. Please try again.", "error")
-
+        
+        # Show user-friendly error message based on error type
+        error_msg = str(e).lower()
+        if "rate limit" in error_msg or "429" in error_msg:
+            flash("AI service is busy. Please wait a moment and try again.", "error")
+        elif "authentication" in error_msg or "401" in error_msg:
+            flash("AI service authentication issue. Please contact support.", "error")
+        elif "network" in error_msg or "timeout" in error_msg:
+            flash("Network connection issue. Please check your connection and try again.", "error")
+        else:
+            flash("Unable to extract events from the text. Please try rephrasing or shortening your text.", "error")
+    
     return redirect(url_for("main_routes.dashboard"))
 
 @main_routes.route("/edit_event/<int:event_id>")
@@ -455,3 +450,74 @@ def terms():
 def privacy():
     """Display Privacy Policy page"""
     return render_template('privacy.html')
+
+
+@main_routes.route("/api/extract_events", methods=["POST"])
+@login_required
+def api_extract_events():
+    """
+    API endpoint for extracting events from text.
+    Can be used by external services, webhooks, or programmatic access.
+    """
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        text = data.get("text", "").strip()
+        if not text:
+            return jsonify({"error": "Text field is required"}), 400
+        
+        source_type = data.get("source_type", "api")
+        auto_sync = data.get("auto_sync", True)
+        
+        # Process text to events
+        result = process_text_to_events(text, current_user, source_type=source_type, auto_sync=auto_sync)
+        
+        # Format response
+        events_data = []
+        for event in result['events']:
+            event_dict = {
+                'id': event.id,
+                'event_name': event.event_name,
+                'event_description': event.event_description,
+                'start_date': event.start_date.strftime('%Y-%m-%d') if event.start_date else None,
+                'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
+                'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
+                'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
+                'start_datetime': event.start_datetime,
+                'end_datetime': event.end_datetime,
+                'location': event.location,
+                'is_synced': event.is_synced,
+                'google_event_id': event.google_event_id
+            }
+            events_data.append(event_dict)
+        
+        response = {
+            'success': True,
+            'text_input_id': result['text_input'].id,
+            'events_count': len(result['events']),
+            'synced_count': result['synced_count'],
+            'from_email': result['from_email'],
+            'events': events_data
+        }
+        
+        return jsonify(response), 200
+        
+    except ValueError as ve:
+        logger.warning(f"API validation error for user {current_user.id}: {str(ve)}")
+        return jsonify({"error": str(ve)}), 400
+        
+    except Exception as e:
+        logger.error(f"API event extraction failed for user {current_user.id}: {str(e)}")
+        sentry_sdk.capture_exception(e)
+        
+        # Return appropriate error response
+        error_msg = str(e).lower()
+        if "rate limit" in error_msg or "429" in error_msg:
+            return jsonify({"error": "AI service is busy. Please try again later."}), 429
+        elif "authentication" in error_msg or "401" in error_msg:
+            return jsonify({"error": "AI service authentication failed."}), 503
+        else:
+            return jsonify({"error": "Failed to process text. Please try again."}), 500
