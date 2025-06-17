@@ -19,12 +19,12 @@ openai = OpenAI(api_key=OPENAI_API_KEY)
 def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
     """
     Extract events from text using OpenAI API following the specified prompt format.
-    
+
     Args:
         text (str): The input text containing event information
         current_date (str): Current date in YYYY-MM-DD format for resolving relative dates
         user_timezone (str): User's timezone for proper time handling
-    
+
     Returns:
         list: List of extracted events as dictionaries
     """
@@ -183,10 +183,10 @@ Text: '''{text}'''"""
 def validate_and_clean_event(event_data):
     """
     Validate and clean extracted event data.
-    
+
     Args:
         event_data (dict): Raw event data from extraction
-    
+
     Returns:
         dict: Cleaned and validated event data
     """

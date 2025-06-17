@@ -80,9 +80,20 @@ def extract_events():
 
         try:
             logger.info("Starting AI event extraction")
-            # Extract events using AI
+            # Extract events using AI with retry logic
             user_timezone = current_user.timezone if current_user.timezone else "UTC"
-            extracted_events, from_email = extract_events_from_text(text, user_timezone=user_timezone)
+            
+            # Retry logic for external API calls
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    extracted_events, from_email = extract_events_from_text(text, user_timezone=user_timezone)
+                    break
+                except Exception as api_error:
+                    if attempt == max_retries - 1:
+                        raise api_error
+                    logger.warning(f"API call attempt {attempt + 1} failed: {str(api_error)}")
+                    time.sleep(2 ** attempt)  # Exponential backoff
 
             if from_email and text_input:
                 text_input.from_email = from_email
