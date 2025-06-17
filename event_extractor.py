@@ -19,14 +19,9 @@ EVENT_EXTRACTION_SYS_PROMPT = """You are an expert at extracting calendar events
 
 Sometimes the text is content of an email or forwarded email. If it is, use the body of the email for extraction and ignore the To, From and replied threads."""
 
-EVENT_EXTRACTION_PROMPT = """Given the following text, extract all event information. For each event, identify:
-- The event name.
-- The event description that summarizes this calendar event. Include details like booking codes, confirmation numbers, and other important details for the event.
-- The start datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
-- The end datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
-- The location (if specified).
+EVENT_EXTRACTION_PROMPT = """Given the following text, extract all event information. 
 
-Important: If event is a flight itinerary, extract each event and carefully convert timezones:
+If event is a flight itinerary, extract each event and carefully convert timezones:
 - Traveler's timezone is {user_timezone}.
 - The event name. Add traveler's name(s) from the text into the event name.
 - The event description that gives context to this calendar event. Include flight duration and other critical travel details like travel agent contact, confirmation number, booking details.
@@ -41,7 +36,12 @@ Taiwan Taoyuan International Airport (TPE) = Asia/Taipei (UTC+8 year-round))
 - Calculate the flight duration using traveler's timezone.
 - If flight duration is explicitly provided in the text, compare and use that duration to confirm or adjust end date/time if needed. The flight time should be exactly the same.
 
-If text is not a flight itinerary, extract text normally.
+If text is not a flight itinerary, extract event and identify:
+- The event name.
+- The event description that summarizes this calendar event. Include details like booking codes, confirmation numbers, and other important details for the event.
+- The start datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
+- The end datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
+- The location (if specified).
 
 If a date is relative (e.g., "next Monday," "tomorrow"), first check the email sent date to resolve it. If there's no email sent date, then assume the current date is {current_date} for resolving it.
 
