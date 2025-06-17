@@ -155,13 +155,21 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
             event.event_description = sanitize_text_for_db(cleaned_event['event_description'])
             event.extracted_at = extraction_time
 
-            # Parse dates safely
+            # Parse dates safely - start_date is required by database schema
             if cleaned_event['start_date']:
                 event.start_date = datetime.strptime(cleaned_event['start_date'], '%Y-%m-%d').date()
+            else:
+                # If no start date provided, use today as default (required by DB schema)
+                event.start_date = datetime.now().date()
+                
             if cleaned_event['start_time']:
                 event.start_time = datetime.strptime(cleaned_event['start_time'], '%H:%M').time()
             if cleaned_event['end_date']:
                 event.end_date = datetime.strptime(cleaned_event['end_date'], '%Y-%m-%d').date()
+            else:
+                # If no end date, use start date
+                event.end_date = event.start_date
+                
             if cleaned_event['end_time']:
                 event.end_time = datetime.strptime(cleaned_event['end_time'], '%H:%M').time()
 

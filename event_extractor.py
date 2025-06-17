@@ -105,13 +105,15 @@ def extract_events_offline(text, from_email=None):
             if from_email:
                 event_name = f"{event_name} (from {from_email})"
 
+            # Provide default date (today) since database requires start_date
+            today = datetime.now().strftime('%Y-%m-%d')
             events.append({
                 "event_name": event_name,
                 "event_description": line,
-                "start_date": None,
+                "start_date": today,
                 "start_time": None,
                 "start_datetime": None,
-                "end_date": None,
+                "end_date": today,
                 "end_time": None,
                 "end_datetime": None,
                 "location": None
@@ -123,19 +125,21 @@ def extract_events_offline(text, from_email=None):
         if from_email:
             event_name = f"{event_name} (from {from_email})"
 
+        # Provide default date (today) since database requires start_date
+        today = datetime.now().strftime('%Y-%m-%d')
         events.append({
             "event_name":
             event_name,
             "event_description":
             text[:200] + "..." if len(text) > 200 else text,
             "start_date":
-            None,
+            today,
             "start_time":
             None,
             "start_datetime":
             None,
             "end_date":
-            None,
+            today,
             "end_time":
             None,
             "end_datetime":
