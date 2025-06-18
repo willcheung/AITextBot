@@ -123,14 +123,14 @@ def handle_exception(e):
     logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
     sentry_sdk.capture_exception(e)
     db.session.rollback()
-    
+
     # Return JSON error for AJAX requests
     if request.is_json:
         return jsonify({
             'error': 'An unexpected error occurred',
             'message': str(e) if app.debug else 'Please try again later'
         }), 500
-    
+
     # Return HTML error page for regular requests
     return render_template('error.html', 
                          error_code=500, 
@@ -139,12 +139,15 @@ def handle_exception(e):
 with app.app_context():
     # Make sure to import the models here or their tables won't be created
     import models  # noqa: F401
-    
+
     # Import and register blueprints
-    from google_auth import google_auth
     from routes import main_routes
-    
-    app.register_blueprint(google_auth)
+    from google_auth import google_auth
+    from mailgun_webhook import mailgun_webhook
+
+    # Register blueprints
     app.register_blueprint(main_routes)
-    
+    app.register_blueprint(google_auth)
+    app.register_blueprint(mailgun_webhook)
+
     db.create_all()

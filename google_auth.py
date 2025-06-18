@@ -48,6 +48,11 @@ def login():
     # Store timezone in session for later use during user creation
     timezone = request.args.get('timezone', 'UTC')
     session['user_timezone'] = timezone
+    
+    # Store email parameter for new user signup flow
+    email = request.args.get('email')
+    if email:
+        session['signup_email'] = email
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
@@ -123,6 +128,17 @@ def callback():
     db.session.commit()
 
     login_user(user)
+    
+    # Check if this is a new signup from email invitation
+    signup_email = session.get('signup_email')
+    if signup_email and signup_email == users_email:
+        # Clear the signup email from session
+        session.pop('signup_email', None)
+        
+        # Check for any pending events that were extracted from their email
+        # This could be implemented by storing temporary events in a separate table
+        # or by re-processing their recent emails
+        logger.info(f"New user {users_email} signed up after email invitation")
 
     return redirect(url_for("main_routes.dashboard"))
 

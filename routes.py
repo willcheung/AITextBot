@@ -1,4 +1,5 @@
 import logging
+import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app import db
@@ -216,6 +217,12 @@ def terms():
 def privacy():
     """Display Privacy Policy page"""
     return render_template('privacy.html')
+
+@main_routes.route('/email-instructions')
+def email_instructions():
+    """Display email integration instructions"""
+    mailgun_domain = os.environ.get("MAILGUN_DOMAIN", "your-domain.com")
+    return render_template('email_instructions.html', mailgun_domain=mailgun_domain)
 
 @main_routes.route("/api/extract_events", methods=["POST"])
 @login_required

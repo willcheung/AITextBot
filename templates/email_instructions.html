@@ -1,0 +1,117 @@
+
+{% extends "base.html" %}
+
+{% block title %}Email Integration - Textbot AI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="mb-4">📧 Email Integration</h1>
+                    
+                    <div class="alert alert-info mb-4">
+                        <h5><i data-feather="mail" class="me-2"></i>Send emails directly to Textbot AI!</h5>
+                        <p class="mb-0">Forward emails, itineraries, or any text with event information to have them automatically processed and added to your calendar.</p>
+                    </div>
+
+                    <h2>How it works</h2>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <strong>1</strong>
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>Send Email</h5>
+                                    <p class="text-muted">Forward any email with event information to:</p>
+                                    <code class="bg-light p-2 d-block">events@{{ mailgun_domain or 'your-domain.com' }}</code>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <strong>2</strong>
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>AI Processing</h5>
+                                    <p class="text-muted">Our AI extracts events from your email content automatically.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <strong>3</strong>
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>Auto-Sync</h5>
+                                    <p class="text-muted">Events are automatically added to your Google Calendar.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <strong>4</strong>
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>Confirmation</h5>
+                                    <p class="text-muted">You'll receive a confirmation email with processing results.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>What emails work best?</h2>
+                    <ul class="mb-4">
+                        <li><strong>Flight confirmations</strong> - Airline itineraries and booking confirmations</li>
+                        <li><strong>Meeting invitations</strong> - Calendar invites or meeting details</li>
+                        <li><strong>Event tickets</strong> - Concert, conference, or event confirmations</li>
+                        <li><strong>Hotel bookings</strong> - Check-in and check-out information</li>
+                        <li><strong>Appointment confirmations</strong> - Doctor visits, interviews, etc.</li>
+                    </ul>
+
+                    <h2>For new users</h2>
+                    <p>If you're not signed up yet, you can still send emails to us! We'll:</p>
+                    <ul class="mb-4">
+                        <li>Extract events from your email</li>
+                        <li>Send you back the results with a signup link</li>
+                        <li>Automatically sync events once you create an account</li>
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <h6><i data-feather="shield" class="me-2"></i>Privacy & Security</h6>
+                        <p class="mb-0">
+                            We only process emails for event extraction. Your email content is not stored permanently, 
+                            and we only extract calendar-related information. See our 
+                            <a href="{{ url_for('main_routes.privacy') }}">Privacy Policy</a> for details.
+                        </p>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('main_routes.dashboard') }}" class="btn btn-primary">
+                            <i data-feather="arrow-left" class="me-2"></i>
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
