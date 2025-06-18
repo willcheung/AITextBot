@@ -31,8 +31,9 @@ Taiwan Taoyuan International Airport (TPE) = Asia/Taipei (UTC+8 year-round))
 - The start (departure) datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone. Consider Daylight Saving Time vs Standard Time where applicable.
 - The end (arrival) datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone. Consider Daylight Saving Time vs Standard Time where applicable.
 - The location is departure airport.
-- Calculate the flight duration using traveler's timezone.
-- If flight duration is explicitly provided in the text, compare and use that duration to confirm or adjust end date/time if needed. The flight time should be exactly the same.
+- Calculate the flight duration using traveler's timezone and ensure the end datetime is AFTER the start datetime by adding days if necessary (especially for trans-Pacific flights crossing the International Date Line).
+- If flight duration is explicitly provided in the text, use that duration to calculate the correct end datetime from the start datetime. The flight time should be exactly the same.
+- IMPORTANT: For flights crossing the International Date Line (like Taiwan to USA), the arrival date in traveler's timezone may be different from the printed arrival date. Always ensure end datetime is after start datetime.
 
 If text is not a flight itinerary, extract event and identify:
 - The event name.
