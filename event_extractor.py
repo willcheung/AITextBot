@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 import re
 
-# the newest OpenAI model is "gpt-4.1-mini".
+# the newest OpenAI model is "gpt-4.1".
 # do not change this unless explicitly requested by the user
 from openai import OpenAI
 import sentry_sdk
@@ -17,7 +17,7 @@ openai = OpenAI(api_key=OPENAI_API_KEY)
 # Centralized prompt template - single place to edit the extraction prompt
 EVENT_EXTRACTION_SYS_PROMPT = """You are an expert at extracting calendar events from text. Always respond with valid JSON format. If text is non-English, retain original language as much as possible.
 
-Sometimes the text is content of an email or forwarded email. If it is, use the body of the email for extraction and ignore the To, From and replied threads."""
+Sometimes the text is content of an email or forwarded email. If it is, use the body of the email for event extraction."""
 
 EVENT_EXTRACTION_PROMPT = """Given the following text, extract all event information. 
 
@@ -84,7 +84,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
 
         # Make synchronous OpenAI API call
         response = openai.chat.completions.create(
-            model="gpt-4.1-mini",
+            model="gpt-4.1",
             messages=[{
                 "role": "system",
                 "content": sys_prompt
