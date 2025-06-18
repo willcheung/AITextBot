@@ -115,7 +115,7 @@ Preferred communication style: Simple, everyday language.
 
 - June 15, 2025:
   - Implemented minimal OAuth scope approach using only "calendar.app.created" permission
-  - Added database storage for Textbot calendar IDs to avoid duplicate calendar creation
+  - Added database storage for Cal Pilot calendar IDs to avoid duplicate calendar creation
   - Removed calendar listing permissions while maintaining full functionality
   - Enhanced user model with textbot_calendar_id field for calendar reuse
   - Added timezone detection and storage for proper calendar event scheduling
@@ -137,7 +137,7 @@ Preferred communication style: Simple, everyday language.
   - Implemented database health checks to prevent connection failures
 - June 14, 2025: 
   - Added comprehensive error handling with Sentry logging service integration
-  - Implemented dedicated "Textbot" calendar creation and management
+  - Implemented dedicated "Cal Pilot" calendar creation and management
   - Fixed None value validation errors in multi-event processing
   - Enhanced Google Calendar integration to use separate calendar for AI-generated events
 - June 13, 2025: Initial setup

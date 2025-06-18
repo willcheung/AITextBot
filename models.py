@@ -9,7 +9,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     google_id = db.Column(db.String(100), unique=True, nullable=True)
     google_token = db.Column(db.Text, nullable=True)
-    textbot_calendar_id = db.Column(db.String(100), nullable=True)  # Store Textbot calendar ID
+    textbot_calendar_id = db.Column(db.String(100), nullable=True)  # Store Cal Pilot calendar ID
     timezone = db.Column(db.String(50), default='UTC')  # User's timezone
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

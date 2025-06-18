@@ -185,7 +185,7 @@ def get_or_create_textbot_calendar(user, access_token):
 
     # Check if user already has a stored calendar ID and validate it
     if user.textbot_calendar_id:
-        logger.info(f"Validating stored Textbot calendar ID: {user.textbot_calendar_id}")
+        logger.info(f"Validating stored Cal Pilot calendar ID: {user.textbot_calendar_id}")
         
         try:
             # Test if the stored calendar ID is still valid
@@ -208,9 +208,9 @@ def get_or_create_textbot_calendar(user, access_token):
 
     try:
         # Create new Textbot calendar since user doesn't have one stored or it's invalid
-        logger.info("Creating new Textbot calendar for user")
+        logger.info("Creating new Cal Pilot calendar for user")
         calendar_data = {
-            'summary': 'Textbot',
+            'summary': 'Cal Pilot',
             'description': 'AI-generated calendar events from text extraction',
             'timeZone': user.timezone
         }
@@ -230,17 +230,17 @@ def get_or_create_textbot_calendar(user, access_token):
             user.textbot_calendar_id = calendar_id
             db.session.commit()
 
-            logger.info(f"Successfully created and stored Textbot calendar with ID: {calendar_id}")
+            logger.info(f"Successfully created and stored Cal Pilot calendar with ID: {calendar_id}")
             return calendar_id
         else:
-            logger.error(f"Failed to create Textbot calendar: {response.status_code} - {response.text}")
-            raise Exception("Failed to create Textbot calendar")
+            logger.error(f"Failed to create Cal Pilot calendar: {response.status_code} - {response.text}")
+            raise Exception("Failed to create Cal Pilot calendar")
 
     except requests.exceptions.Timeout:
-        logger.error("Timeout while creating Textbot calendar")
+        logger.error("Timeout while creating Cal Pilot calendar")
         raise Exception("Calendar operation timed out. Please try again.")
     except Exception as e:
-        logger.error(f"Error creating Textbot calendar: {str(e)}")
+        logger.error(f"Error creating Cal Pilot calendar: {str(e)}")
         raise Exception("Failed to create calendar. Please try again.")
 
 def create_calendar_event(user, event_data):
