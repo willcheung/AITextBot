@@ -25,14 +25,12 @@ If event is a flight itinerary, extract each event and carefully convert timezon
 - Traveler's timezone is {user_timezone}.
 - The event name. Add traveler's name(s) from the text into the event name.
 - The event description that gives context to this calendar event. Include flight duration and other critical travel details like travel agent contact, confirmation number, booking details.
-- The start datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone accounting for standard time or daylight saving time.
-- The end datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone accounting for standard time or daylight saving time.
-- The location is departure airport.
 - Identify the departure and arrival airport codes or cities.
-- Use the known IANA time zones for these airports to determine their timezone offsets for the specified dates. (Example: San Francisco International Airport (SFO) = America/Los_Angeles (UTC-7 during DST in July-August)
+- Use the known IANA time zones for these airports to determine their timezone offsets for the specified dates. (Example: San Francisco International Airport (SFO) = America/Los_Angeles (UTC-7 during DST, UTC-8 otherwise)
 Taiwan Taoyuan International Airport (TPE) = Asia/Taipei (UTC+8 year-round))
-- Using the departure date and time with departure airport timezone, convert it to traveler's timezone. Consider daylight savings there is a US timezone. The converted date/time will be the event start date and time in traveler's timezone.
-- Using the arrival date and time with arrival airport timezone, convert it to traveler's timezone. Consider daylight savings there is a US timezone. The converted date/time will be the event end date and time in traveler's timezone.
+- The start (departure) datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone. Consider Daylight Saving Time vs Standard Time where applicable.
+- The end (arrival) datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone. Consider Daylight Saving Time vs Standard Time where applicable.
+- The location is departure airport.
 - Calculate the flight duration using traveler's timezone.
 - If flight duration is explicitly provided in the text, compare and use that duration to confirm or adjust end date/time if needed. The flight time should be exactly the same.
 
