@@ -21,19 +21,17 @@ Sometimes the text is content of an email or forwarded email. If it is, use the 
 
 EVENT_EXTRACTION_PROMPT = """Given the following text, extract all event information. 
 
-If event is a flight itinerary, extract each event and carefully convert timezones:
+If text is a flight itinerary, extract each event and carefully convert timezones:
 - Traveler's timezone is {user_timezone}.
 - The event name. Add traveler's name(s) from the text into the event name.
-- The event description that gives context to this calendar event. Include flight duration and other critical travel details like travel agent contact, confirmation number, booking details.
+- The event description that gives context to this calendar event. Include flight duration and other critical travel details like travel agent contact, confirmation number, booking details. If there are multiple travelers, list all of them.
 - Identify the departure and arrival airport codes or cities.
 - Use the known IANA time zones for these airports to determine their timezone offsets for the specified dates. (Example: San Francisco International Airport (SFO) = America/Los_Angeles (UTC-7 during DST, UTC-8 otherwise)
 Taiwan Taoyuan International Airport (TPE) = Asia/Taipei (UTC+8 year-round))
 - The start (departure) datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone. Consider Daylight Saving Time vs Standard Time where applicable.
 - The end (arrival) datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339) converted to traveler's timezone. Consider Daylight Saving Time vs Standard Time where applicable.
-- The location is departure airport.
-- Calculate the flight duration using traveler's timezone and ensure the end datetime is AFTER the start datetime by adding days if necessary (especially for trans-Pacific flights crossing the International Date Line).
-- If flight duration is explicitly provided in the text, use that duration to calculate the correct end datetime from the start datetime. The flight time should be exactly the same.
-- IMPORTANT: For flights crossing the International Date Line (like Taiwan to USA), the arrival date in traveler's timezone may be different from the printed arrival date. Always ensure end datetime is after start datetime.
+- The event location is departure airport.
+- IMPORTANT: Always ensure end datetime is after start datetime, especially for international flights.
 
 If text is not a flight itinerary, extract event and identify:
 - The event name.
