@@ -174,7 +174,7 @@ def get_or_create_textbot_calendar(user, access_token):
         access_token: Valid Google access token
 
     Returns:
-        str: Calendar ID for the Textbot calendar
+        str: Calendar ID for the Calendar Autobot calendar
     """
     from app import db
 
