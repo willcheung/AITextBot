@@ -48,7 +48,7 @@ def send_signup_email_with_events(recipient_email, events_data, original_subject
             f"{MAILGUN_API_URL}/messages",
             auth=("api", MAILGUN_API_KEY),
             data={
-                "from": f"Cal Pilot <noreply@{MAILGUN_DOMAIN}>",
+                "from": f"Calendar Autobot <noreply@{MAILGUN_DOMAIN}>",
                 "to": recipient_email,
                 "subject": f"Your Calendar Events Extracted - Sign Up to Sync",
                 "html": html_content,
@@ -98,12 +98,12 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Calendar Events - Textbot AI</title>
+        <title>Your Calendar Events - Calendar Autobot</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
 
         <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #007bff; margin-bottom: 10px;">🤖 Cal Pilot</h1>
+            <h1 style="color: #007bff; margin-bottom: 10px;">🤖 Calendar Autobot</h1>
             <p style="color: #666; margin: 0;">Transform text into calendar events</p>
         </div>
 
@@ -116,7 +116,7 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
 
             <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 25px 0;">
                 <h3 style="margin-top: 0; color: #0066cc;">🚀 Want these events in your Google Calendar?</h3>
-                <p style="margin-bottom: 15px;">Sign up for Textbot AI and I'll automatically sync these events to your Google Calendar!</p>
+                <p style="margin-bottom: 15px;">Sign up for Calendar Autobot and I'll automatically sync these events to your Google Calendar!</p>
                 <div style="text-align: center;">
                     <a href="{signup_url}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
                         🔗 Sign Up & Sync Events
@@ -163,12 +163,12 @@ def send_confirmation_email(recipient_email, events_count, synced_count):
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Events Processed - Textbot AI</title>
+            <title>Events Processed - Calendar Autobot</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
 
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #007bff; margin-bottom: 10px;">🤖 Cal Pilot</h1>
+                <h1 style="color: #007bff; margin-bottom: 10px;">🤖 Calendar Autobot</h1>
             </div>
 
             <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
@@ -197,7 +197,7 @@ def send_confirmation_email(recipient_email, events_count, synced_count):
             f"{MAILGUN_API_URL}/messages",
             auth=("api", MAILGUN_API_KEY),
             data={
-                "from": f"Cal Pilot <noreply@{MAILGUN_DOMAIN}>",
+                "from": f"Calendar Autobot <noreply@{MAILGUN_DOMAIN}>",
                 "to": recipient_email,
                 "subject": f"✅ {events_count} Event(s) Processed Successfully",
                 "html": html_content,

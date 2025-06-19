@@ -185,8 +185,8 @@ def get_or_create_textbot_calendar(user, access_token):
 
     # Check if user already has a stored calendar ID and validate it
     if user.textbot_calendar_id:
-        logger.info(f"Validating stored Cal Pilot calendar ID: {user.textbot_calendar_id}")
-        
+        logger.info(f"Validating stored Calendar Autobot calendar ID: {user.textbot_calendar_id}")
+
         try:
             # Test if the stored calendar ID is still valid
             test_response = requests.get(
@@ -194,23 +194,23 @@ def get_or_create_textbot_calendar(user, access_token):
                 headers=headers,
                 timeout=10
             )
-            
+
             if test_response.status_code == 200:
                 logger.info("Stored calendar ID is valid, using it")
                 return user.textbot_calendar_id
             else:
                 logger.warning(f"Stored calendar ID is invalid (status {test_response.status_code}), will create new calendar")
                 user.textbot_calendar_id = None  # Clear invalid ID
-                
+
         except Exception as e:
             logger.warning(f"Error validating stored calendar ID: {str(e)}, will create new calendar")
             user.textbot_calendar_id = None  # Clear invalid ID
 
     try:
-        # Create new Textbot calendar since user doesn't have one stored or it's invalid
-        logger.info("Creating new Cal Pilot calendar for user")
+        # Create new Calendar Autobot calendar since user doesn't have one stored or it's invalid
+        logger.info("Creating new Calendar Autobot calendar for user")
         calendar_data = {
-            'summary': 'Cal Pilot',
+            'summary': 'Calendar Autobot',
             'description': 'AI-generated calendar events from text extraction',
             'timeZone': user.timezone
         }
@@ -230,17 +230,17 @@ def get_or_create_textbot_calendar(user, access_token):
             user.textbot_calendar_id = calendar_id
             db.session.commit()
 
-            logger.info(f"Successfully created and stored Cal Pilot calendar with ID: {calendar_id}")
+            logger.info(f"Successfully created and stored Calendar Autobot calendar with ID: {calendar_id}")
             return calendar_id
         else:
-            logger.error(f"Failed to create Cal Pilot calendar: {response.status_code} - {response.text}")
-            raise Exception("Failed to create Cal Pilot calendar")
+            logger.error(f"Failed to create Calendar Autobot calendar: {response.status_code} - {response.text}")
+            raise Exception("Failed to create Calendar Autobot calendar")
 
     except requests.exceptions.Timeout:
-        logger.error("Timeout while creating Cal Pilot calendar")
+        logger.error("Timeout while creating Calendar Autobot calendar")
         raise Exception("Calendar operation timed out. Please try again.")
     except Exception as e:
-        logger.error(f"Error creating Cal Pilot calendar: {str(e)}")
+        logger.error(f"Error creating Calendar Autobot calendar: {str(e)}")
         raise Exception("Failed to create calendar. Please try again.")
 
 def create_calendar_event(user, event_data):
@@ -258,7 +258,7 @@ def create_calendar_event(user, event_data):
         logger.info(f"Creating calendar event: {event_data.get('event_name', 'Unnamed Event')}")
         access_token = refresh_google_token(user)
 
-        # Get or create the Textbot calendar
+        # Get or create the Calendar Autobot calendar
         calendar_id = get_or_create_textbot_calendar(user, access_token)
 
         # Use combined datetime fields if available, otherwise fall back to separate date/time
@@ -371,7 +371,7 @@ def update_calendar_event(user, google_event_id, event_data):
     try:
         access_token = refresh_google_token(user)
 
-        # Get the Textbot calendar ID
+        # Get the Calendar Autobot calendar ID
         calendar_id = get_or_create_textbot_calendar(user, access_token)
 
         # Similar logic as create_calendar_event but for updating
@@ -441,7 +441,7 @@ def delete_calendar_event(user, google_event_id):
     try:
         access_token = refresh_google_token(user)
 
-        # Get the Textbot calendar ID
+        # Get the Calendar Autobot calendar ID
         calendar_id = get_or_create_textbot_calendar(user, access_token)
 
         headers = {
