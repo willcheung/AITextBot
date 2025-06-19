@@ -109,7 +109,7 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
         if from_email:
             for event in events:
                 if event.get("event_description"):
-                    event["event_description"] = f"{event['event_description']} (from {from_email})"
+                    event["event_description"] = f"{event['event_description']} \n\n(from {from_email})"
 
         # Add emojis to event names using OpenAI-generated emoji
         for event in events:
