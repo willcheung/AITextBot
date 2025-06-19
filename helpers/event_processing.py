@@ -136,6 +136,12 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
     if auto_sync and created_events:
         for event in created_events:
             try:
+                # Skip if already synced (in case of duplicate processing)
+                if event.is_synced and event.google_event_id:
+                    logger.info(f"Event '{event.event_name}' already synced, skipping")
+                    synced_count += 1
+                    continue
+
                 # Prepare event data for Google Calendar
                 event_data = {
                     'event_name': event.event_name,
@@ -158,7 +164,7 @@ def process_text_to_events(text, user, source_type="manual", auto_sync=True):
                     if event.end_time:
                         event_data['end_time'] = event.end_time.strftime('%H:%M')
 
-                # Create event in Google Calendar
+                # Create event in Google Calendar (includes duplicate prevention)
                 google_event_id = create_calendar_event(user, event_data)
                 if google_event_id:
                     event.google_event_id = google_event_id

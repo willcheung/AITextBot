@@ -261,6 +261,49 @@ def create_calendar_event(user, event_data):
         # Get or create the Calendar Autobot calendar
         calendar_id = get_or_create_textbot_calendar(user, access_token)
 
+        # Check for duplicate events in the calendar to prevent duplicates
+        event_name = event_data.get('event_name', '')
+        start_datetime = None
+        
+        if event_data.get('start_datetime'):
+            start_datetime = event_data['start_datetime']
+        elif event_data.get('start_date'):
+            start_date = event_data['start_date']
+            start_time = event_data.get('start_time', '09:00')
+            start_datetime = f"{start_date}T{start_time}:00"
+        
+        if start_datetime and event_name:
+            # Parse the datetime to get the date for searching
+            try:
+                from datetime import datetime as dt
+                if 'T' in start_datetime:
+                    search_date = start_datetime.split('T')[0]
+                else:
+                    search_date = start_datetime
+                
+                # Search for existing events on the same date with similar title
+                headers = {'Authorization': f'Bearer {access_token}'}
+                search_url = f'https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events'
+                search_params = {
+                    'timeMin': f'{search_date}T00:00:00Z',
+                    'timeMax': f'{search_date}T23:59:59Z',
+                    'q': event_name[:50],  # Use first 50 chars for search
+                    'singleEvents': True
+                }
+                
+                search_response = requests.get(search_url, headers=headers, params=search_params, timeout=10)
+                if search_response.status_code == 200:
+                    existing_events = search_response.json().get('items', [])
+                    for existing_event in existing_events:
+                        existing_title = existing_event.get('summary', '')
+                        # Check if titles are very similar (allowing for small differences)
+                        if existing_title.lower().strip() == event_name.lower().strip():
+                            logger.warning(f"Duplicate event detected: '{event_name}' already exists on {search_date}")
+                            return existing_event.get('id')  # Return existing event ID instead of creating duplicate
+                            
+            except Exception as search_error:
+                logger.warning(f"Duplicate check failed, proceeding with creation: {str(search_error)}")
+
         # Use combined datetime fields if available, otherwise fall back to separate date/time
         if event_data.get('start_datetime') and event_data.get('end_datetime'):
             start_datetime = event_data['start_datetime']
@@ -459,3 +502,60 @@ def delete_calendar_event(user, google_event_id):
     except Exception as e:
         current_app.logger.error(f"Error deleting calendar event: {str(e)}")
         return False
+def remove_duplicate_events(user):
+    """
+    Remove duplicate events from the Calendar Autobot calendar.
+    
+    Args:
+        user: User object with Google token
+        
+    Returns:
+        int: Number of duplicates removed
+    """
+    try:
+        access_token = refresh_google_token(user)
+        calendar_id = get_or_create_textbot_calendar(user, access_token)
+        
+        headers = {'Authorization': f'Bearer {access_token}'}
+        
+        # Get all events from the calendar
+        events_url = f'https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events'
+        response = requests.get(events_url, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            logger.error(f"Failed to fetch events for duplicate cleanup: {response.status_code}")
+            return 0
+            
+        events = response.json().get('items', [])
+        
+        # Group events by title and start time
+        event_groups = {}
+        for event in events:
+            title = event.get('summary', '').strip().lower()
+            start_time = event.get('start', {}).get('dateTime', '')
+            if start_time:
+                key = f"{title}|{start_time[:10]}"  # Title + date
+                if key not in event_groups:
+                    event_groups[key] = []
+                event_groups[key].append(event)
+        
+        # Remove duplicates (keep the first one, delete the rest)
+        removed_count = 0
+        for key, group in event_groups.items():
+            if len(group) > 1:
+                # Keep the first event, delete the rest
+                for duplicate_event in group[1:]:
+                    event_id = duplicate_event.get('id')
+                    delete_url = f'https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{event_id}'
+                    delete_response = requests.delete(delete_url, headers=headers, timeout=10)
+                    if delete_response.status_code == 204:
+                        removed_count += 1
+                        logger.info(f"Removed duplicate event: {duplicate_event.get('summary', 'Unnamed')}")
+                    else:
+                        logger.warning(f"Failed to remove duplicate event: {delete_response.status_code}")
+        
+        return removed_count
+        
+    except Exception as e:
+        logger.error(f"Error removing duplicate events: {str(e)}")
+        return 0
