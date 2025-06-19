@@ -139,7 +139,7 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
         </div>
 
         <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #888;">
-            <p>Powered by Textbot AI • <a href="{base_url}/privacy" style="color: #888;">Privacy Policy</a> • <a href="{base_url}/terms" style="color: #888;">Terms</a></p>
+            <p>Powered by Calendar Autobot • <a href="{base_url}/privacy" style="color: #888;">Privacy Policy</a> • <a href="{base_url}/terms" style="color: #888;">Terms</a></p>
         </div>
 
     </body>
