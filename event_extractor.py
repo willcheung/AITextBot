@@ -40,6 +40,10 @@ If text is not a flight itinerary, extract event and identify:
 - The end datetime as a combined date-time value (formatted according to IETF Datatracker RFC3339)
 - The location (if specified).
 
+If events are recurring, extract each instance of the event.
+
+If events are repeated as duplicates, extract only one instance of the event.
+
 If a date is relative (e.g., "next Monday," "tomorrow"), first check the email sent date to resolve it. If there's no email sent date, then assume the current date is {current_date} for resolving it.
 
 Provide the output as a JSON object with a "events" key containing a list, where each object in the list represents an event with keys: "event_name", "event_description", "start_date", "start_time", "start_datetime", "end_date", "end_time", "end_datetime", "location", "emoji". If a piece of information is not found, use null for its value.
