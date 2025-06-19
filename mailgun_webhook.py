@@ -116,10 +116,10 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
 
             <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 25px 0;">
                 <h3 style="margin-top: 0; color: #0066cc;">🚀 Want these events in your Google Calendar?</h3>
-                <p style="margin-bottom: 15px;">Sign up for Calendar Autobot and I'll automatically sync these events to your Google Calendar!</p>
+                <p style="margin-bottom: 15px;">Sign up for Calendar Autobot and I'll automatically sync these events to your Google Calendar! We've already saved these events for you - just sign up to claim them.</p>
                 <div style="text-align: center;">
                     <a href="{signup_url}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
-                        🔗 Sign Up & Sync Events
+                        🔗 Sign Up & Claim Your Events
                     </a>
                 </div>
             </div>
@@ -283,37 +283,49 @@ def handle_mailgun_webhook():
                 return jsonify({"error": "Failed to process email"}), 500
 
         else:
-            # Handle new user - extract events and send signup email
+            # Handle new user - extract events, save to database, and send signup email
             try:
-                # Extract events without creating user account
-                from event_extractor import extract_events_from_text, validate_and_clean_event
+                # Create a temporary user record for data storage
+                temp_user = User()
+                temp_user.email = sender_email
+                temp_user.username = f"temp_{sender_email.replace('@', '_').replace('.', '_')}"
+                temp_user.timezone = "UTC"
+                temp_user.google_id = None
+                temp_user.google_token = None
 
+                # Add temp user to session but don't commit yet
+                db.session.add(temp_user)
+                db.session.flush()  # Get the user ID without committing
+
+                # Process text to events using helper function
                 formatted_text = f"From: {sender_email}\nSubject: {subject}\n\n{email_text}"
 
-                extracted_events, from_email, is_offline, openai_status, openai_error = extract_events_from_text(
+                result = process_text_to_events(
                     formatted_text, 
-                    user_timezone="UTC"
+                    temp_user, 
+                    source_type="email", 
+                    auto_sync=False  # Don't auto-sync for temp users
                 )
 
-                # Validate and format events for email
-                events_data = []
-                for event_data in extracted_events:
-                    try:
-                        cleaned_event = validate_and_clean_event(event_data)
-                        events_data.append({
-                            'event_name': cleaned_event['event_name'],
-                            'event_description': cleaned_event['event_description'],
-                            'start_date': cleaned_event['start_date'],
-                            'start_time': cleaned_event['start_time'],
-                            'end_date': cleaned_event['end_date'],
-                            'end_time': cleaned_event['end_time'],
-                            'location': cleaned_event['location']
-                        })
-                    except Exception as e:
-                        logger.warning(f"Skipping invalid event data: {str(e)}")
-                        continue
+                events_count = len(result['events'])
 
-                logger.info(f"Extracted {len(events_data)} events for new user {sender_email}")
+                # Commit the database changes
+                db.session.commit()
+
+                logger.info(f"Extracted and saved {events_count} events for new user {sender_email}")
+
+                # Format events data for email
+                events_data = []
+                for event in result['events']:
+                    events_data.append({
+                        'event_name': event.event_name,
+                        'event_description': event.event_description,
+                        'start_date': event.start_date.strftime('%Y-%m-%d') if event.start_date else None,
+                        'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
+                        'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
+                        'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
+                        'location': event.location
+                    })
 
                 # Send signup email with extracted events
                 send_signup_email_with_events(sender_email, events_data, subject)
@@ -321,12 +333,16 @@ def handle_mailgun_webhook():
                 return jsonify({
                     "status": "signup_sent",
                     "email": sender_email,
-                    "events_extracted": len(events_data)
+                    "temp_user_id": temp_user.id,
+                    "text_input_id": result['text_input'].id,
+                    "events_extracted": events_count,
+                    "events_saved": events_count
                 }), 200
 
             except Exception as e:
                 logger.error(f"Error processing email for new user {sender_email}: {str(e)}")
                 sentry_sdk.capture_exception(e)
+                db.session.rollback()
 
                 # Send basic signup email even if extraction fails
                 send_signup_email_with_events(sender_email, [], subject)
