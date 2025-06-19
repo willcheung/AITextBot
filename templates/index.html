@@ -1,17 +1,16 @@
 
 {% extends "base.html" %}
 
-{% block title %}AI Calendar Copilot | Transform Anything to Calendar Events{% endblock %}
+{% block title %}Calendar Autobot | Transform Emails and Pictures to Calendar Events{% endblock %}
 
 {% block content %}
 <div class="hero-section">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8 text-center">
-                <h1 class="hero-title">Transform Emails, Documents, Pictures to Calendar Events</h1>
+                <h1 class="hero-title">Transform Emails and Photos to Google Calendar Events</h1>
                 <p class="hero-subtitle">
-                    Forward your confirmation emails, travel documents, or pictures of event dates. 
-                    Our AI will extract calendar events and sync them to your Google Calendar.
+                    Just forward your confirmations, invites, or screenshots - our AI finds the date and adds it to your Google Calendar. No more manual entry!
                 </p>
                 
                 {% if not current_user.is_authenticated %}
@@ -54,7 +53,7 @@
                         <i data-feather="mail"></i>
                     </div>
                     <h4>Forward Your Emails</h4>
-                    <p>Forward emails, documents, or any pictures containing event information to <strong>go@calpilot.com</strong>.</p>
+                    <p>Forward emails, documents, or any pictures containing event information to <strong>ai@calpilot.com</strong>.</p>
                 </div>
             </div>
             
@@ -117,7 +116,7 @@ Thanks!
                     <h3 class="mb-4">Example: Flight Itinerary</h3>
                     <div class="example-text">
                         <code>
-Subject: Your Flight Confirmation - UA 2847<br>
+Subject: Your Flight and Hotel Confirmation<br>
 From: noreply@united.com<br><br>
 
 CONFIRMATION: ABC123<br><br>
@@ -129,6 +128,14 @@ Departure: 8:15 AM PDT - San Francisco International Airport (SFO)<br>
 Arrival: 4:45 PM EDT - John F. Kennedy International Airport (JFK)<br>
 Duration: 5 hours 30 minutes<br><br>
 
+Hotel: Marriott Downtown<br>
+Address: 123 Business District, New York, NY<br>
+Check-in: March 28, 2025 at 3:00 PM<br>
+Check-out: March 30, 2025 at 11:00 AM<br>
+Nights: 2<br>
+Room Type: King Deluxe<br>
+Confirmation Number: HTL789456<br><br>
+
 Passenger: John Smith<br>
 Seat: 12A<br>
 Terminal: 3
@@ -139,11 +146,12 @@ Terminal: 3
                         <h5>AI Will Extract and Sync to Your Google Calendar:</h5>
                         <ul class="list-unstyled">
                             <li><i data-feather="check-circle" class="text-success me-2"></i> Flight UA 2847 (SFO → JFK) - March 28, 8:15 AM - 4:45 PM with timezone adjustments</li>
+                            <li><i data-feather="check-circle" class="text-success me-2"></i> Hotel Stay - Marriott Downtown - March 28-30, 2025 with check-in/out times</li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- Hotel Confirmation Example -->
+                <!-- Photo of an event on paper taped to the wall -->
                 <div class="example-card mt-4">
                     <h3 class="mb-4">Example: Hotel Confirmation</h3>
                     <div class="example-text">
