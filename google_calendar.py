@@ -376,7 +376,6 @@ def update_calendar_event(user, google_event_id, event_data):
         calendar_event = {
             "summary": event_data['event_name'],
             "description": event_data.get('event_description', ''),
-```
             "start": {
                 "dateTime": start_datetime,
                 "timeZone": user.timezone
