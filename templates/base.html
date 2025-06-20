@@ -34,6 +34,10 @@
                         <i data-feather="grid"></i>
                         <span>Dashboard</span>
                     </a>
+                    <a class="nav-link me-2" href="{{ url_for('google_auth.login') }}" title="Refresh Google Calendar access">
+                        <i data-feather="refresh-cw"></i>
+                        <span>Refresh Google Access</span>
+                    </a>
                     <a class="nav-link" href="{{ url_for('google_auth.logout') }}">
                         <i data-feather="log-out"></i>
                         <span>Logout</span>

@@ -130,6 +130,14 @@ def callback():
 
     # Update the Google token for Calendar API access
     user.google_token = json.dumps(token_data)
+
+    # Save refresh token separately for better management
+    if token_data.get('refresh_token'):
+        user.google_refresh_token = token_data.get('refresh_token')
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Stored refresh token for user {users_email}")
+
     db.session.commit()
 
     login_user(user)

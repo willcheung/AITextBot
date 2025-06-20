@@ -120,13 +120,15 @@ def refresh_google_token(user):
                 raise Exception("Google authentication has expired. Please sign in again")
         else:
             # No refresh token or other error
-            if test_response.status_code == 401:
+            if test_response.status_code == 401 or test_response.status_code == 400:
                 if not refresh_token:
                     logger.warning("No refresh token available, user needs to re-authenticate")
-                    raise Exception("Google authentication has expired. Please sign in again with 'Refresh Google Access' button")
+                    logger.warning("This usually happens when user granted permissions without offline access")
+                    raise Exception("Google Calendar access expired. Please use 'Refresh Google Access' to restore calendar sync")
                 else:
                     logger.error("Token refresh failed or other auth issue")
-                    raise Exception("Google authentication has expired. Please sign in again")
+                    logger.error(f"Refresh token present but failed: {refresh_token[:10] if refresh_token else 'None'}...")
+                    raise Exception("Google authentication has expired. Please use 'Refresh Google Access' to sign in again")
             else:
                 logger.error(f"Calendar API error: {test_response.status_code} - {test_response.text}")
                 raise Exception("Unable to access Google Calendar. Please check your permissions")
