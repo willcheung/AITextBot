@@ -109,6 +109,46 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* Bottom CTA section styles */
+.cta-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 4rem 0;
+    margin-top: 3rem;
+}
+
+.cta-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.email-cta {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    color: white;
+}
+
+.email-label {
+    font-size: 1.1rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.email-address-large {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'Source Code Pro', monospace;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+    letter-spacing: 1px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
 .email-instruction h3 {
     color: white;
     font-weight: 600;
