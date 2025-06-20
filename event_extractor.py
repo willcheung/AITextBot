@@ -81,8 +81,9 @@ def extract_events_from_text(text, current_date=None, user_timezone="UTC"):
 
     try:
         logger.info(f"Extracting events from text of length {len(text)}")
-        logger.info(sys_prompt)
-        logger.info(prompt)
+        # Display the prompt for debugging purposes
+        #logger.info(sys_prompt)
+        #logger.info(prompt)
 
         # Make synchronous OpenAI API call
         response = openai.chat.completions.create(

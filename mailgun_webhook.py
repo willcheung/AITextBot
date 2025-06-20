@@ -119,7 +119,7 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
                 <p style="margin-bottom: 15px;">Sign up for Calendar Autobot and I'll automatically sync these events to your Google Calendar! We've already saved these events for you - just sign up to claim them.</p>
                 <div style="text-align: center;">
                     <a href="{signup_url}" style="display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
-                        🔗 Sign Up & Claim Your Events
+                        🔗 Sign Up & Sync Your Events
                     </a>
                 </div>
             </div>
@@ -246,15 +246,15 @@ def handle_mailgun_webhook():
 
         logger.info(f"Processing email from {sender_email}, subject: {subject}")
 
+        # Process text to events using helper function
+        formatted_text = f"From: {sender_email}\nSubject: {subject}\n\n{email_text}"
+
         # Check if sender is an existing user
         user = User.query.filter_by(email=sender_email).first()
 
         if user:
             # Process email for existing user
             try:
-                # Create email text with metadata for better extraction
-                formatted_text = f"From: {sender_email}\nSubject: {subject}\n\n{email_text}"
-
                 result = process_text_to_events(
                     formatted_text, 
                     user, 
@@ -265,7 +265,7 @@ def handle_mailgun_webhook():
                 events_count = len(result['events'])
                 synced_count = result['synced_count']
 
-                logger.info(f"Processed {events_count} events for user {user.id}, synced {synced_count}")
+                logger.info(f"Processed {events_count} events for existing user {user.id}, synced {synced_count}")
 
                 # Send confirmation email
                 send_confirmation_email(sender_email, events_count, synced_count)
@@ -296,9 +296,6 @@ def handle_mailgun_webhook():
                 # Add temp user to session but don't commit yet
                 db.session.add(temp_user)
                 db.session.flush()  # Get the user ID without committing
-
-                # Process text to events using helper function
-                formatted_text = f"From: {sender_email}\nSubject: {subject}\n\n{email_text}"
 
                 result = process_text_to_events(
                     formatted_text, 
