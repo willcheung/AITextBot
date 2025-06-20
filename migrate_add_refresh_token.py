@@ -18,7 +18,9 @@ def migrate_add_refresh_token():
             
             if 'google_refresh_token' not in columns:
                 print("Adding google_refresh_token column to User table...")
-                db.engine.execute('ALTER TABLE "user" ADD COLUMN google_refresh_token TEXT')
+                with db.engine.connect() as conn:
+                    conn.execute(db.text('ALTER TABLE "user" ADD COLUMN google_refresh_token TEXT'))
+                    conn.commit()
                 print("Column added successfully!")
             else:
                 print("Column google_refresh_token already exists.")
