@@ -85,7 +85,7 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
                 <strong>{event.get('event_name', 'Untitled Event')}</strong><br>
                 <span style='color: #666;'>📅 {event.get('start_date', '')} {event.get('start_time', '')}</span><br>
                 {f"📍 {event.get('location', '')}<br>" if event.get('location') else ""}
-                {f"<em>{event.get('event_description', '').replace('• ', '<br>• ')}</em>" if event.get('event_description') else ""}
+                {f"<em>{event.get('event_description', '').replace('- ', '<br>- ')}</em>" if event.get('event_description') else ""}
             </li>
             """
         events_html += "</ul>"
