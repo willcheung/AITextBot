@@ -26,7 +26,7 @@ else:
 
 # Determine the correct redirect URL based on the environment
 if os.environ.get("FLASK_ENV") == "production":
-    REDIRECT_URL = os.environ.get("PRODUCTION_REDIRECT_URL", "https://your-production-domain.com/google_login/callback")
+    REDIRECT_URL = os.environ.get("PRODUCTION_REDIRECT_URL", "https://calautobot.com/google_login/callback")
 else:
     REDIRECT_URL = DEV_REDIRECT_URL
 

@@ -48,7 +48,7 @@ def get_mailgun_forward_email():
         return f"go@{mailgun_domain}"
     
     # Fallback
-    return "go@your-domain.com"
+    return "go@calAutobot.com"
 
 def is_production():
     """
