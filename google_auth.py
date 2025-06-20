@@ -70,7 +70,7 @@ def login():
             "https://www.googleapis.com/auth/calendar.app.created"
         ],
         access_type="offline",  # Request offline access to get refresh token
-        prompt="select_account"  # Only prompt for account selection, not consent for returning users
+        prompt="consent"  # Only prompt for account selection, not consent for returning users
     )
     return redirect(request_uri)
 
