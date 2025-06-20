@@ -9,17 +9,21 @@ def get_base_domain():
     Get the appropriate base domain for the current environment.
     Returns the full domain without protocol.
     """
-    # Check for production domain first if we're in a deployment
-    prod_domain = os.environ.get("PRODUCTION_DOMAIN")
-    if prod_domain:
-        logger.info(f"Using production domain: {prod_domain}")
-        return prod_domain
-
-    # Check if we're in Replit development environment
-    replit_dev_domain = os.environ.get("REPLIT_DEV_DOMAIN")
-    if replit_dev_domain:
-        logger.info(f"Using Replit dev domain: {replit_dev_domain}")
-        return replit_dev_domain
+    # Use environment detection to determine correct domain
+    if is_production():
+        prod_domain = os.environ.get("PRODUCTION_DOMAIN")
+        if prod_domain:
+            logger.info(f"Using production domain: {prod_domain}")
+            return prod_domain
+        else:
+            logger.warning("Production environment detected but no PRODUCTION_DOMAIN set")
+    
+    if is_development():
+        # Check if we're in Replit development environment
+        replit_dev_domain = os.environ.get("REPLIT_DEV_DOMAIN")
+        if replit_dev_domain:
+            logger.info(f"Using Replit dev domain: {replit_dev_domain}")
+            return replit_dev_domain
 
     # Fallback for local development
     logger.info("Using localhost fallback")
