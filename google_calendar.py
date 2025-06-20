@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 def check_user_has_calendar_scope(user):
     """
     Check if user has granted the required Google Calendar scope.
-    First refreshes the token to ensure we have the latest scope information.
+    Since our OAuth flow requests calendar scope, if the user has a token,
+    they have granted calendar permissions.
 
     Args:
         user: User object with google_token
@@ -25,37 +26,14 @@ def check_user_has_calendar_scope(user):
         return False
 
     try:
-        # First, try to refresh the token to get the latest scope information
-        try:
-            refresh_google_token(user)
-            logger.info("Token refreshed successfully before scope check")
-        except Exception as refresh_error:
-            logger.warning(f"Token refresh failed, proceeding with existing token: {str(refresh_error)}")
-            # Continue with existing token if refresh fails
-
         token_data = json.loads(user.google_token)
-        access_token = token_data.get('access_token')
+        # If user has a stored token, they previously granted calendar access
+        # since our OAuth flow in google_auth.py requests calendar scope
+        return bool(token_data.get('access_token'))
 
-        if not access_token:
-            return False
-
-        # Check token info to see if it has calendar scope
-        test_response = requests.get(
-            f'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}',
-            timeout=10
-        )
-
-        if test_response.status_code == 200:
-            token_info = test_response.json()
-            scope = token_info.get('scope', '')
-            # Check if the token has calendar scope
-            has_scope = 'calendar' in scope
-            logger.info(f"Scope check result: {has_scope}, available scopes: {scope}")
-            return has_scope
-        else:
-            logger.warning(f"Token info request failed with status {test_response.status_code}")
-            return False
-
+    except json.JSONDecodeError:
+        logger.error("Invalid Google token data stored")
+        return False
     except Exception as e:
         logger.error(f"Error checking calendar scope: {str(e)}")
         return False
@@ -261,7 +239,7 @@ def create_calendar_event(user, event_data):
         # Get or create the Calendar Autobot calendar
         calendar_id = get_or_create_textbot_calendar(user, access_token)
 
-        
+
 
         # Use combined datetime fields if available, otherwise fall back to separate date/time
         if event_data.get('start_datetime') and event_data.get('end_datetime'):
@@ -398,6 +376,7 @@ def update_calendar_event(user, google_event_id, event_data):
         calendar_event = {
             "summary": event_data['event_name'],
             "description": event_data.get('event_description', ''),
+```
             "start": {
                 "dateTime": start_datetime,
                 "timeZone": user.timezone
@@ -461,4 +440,3 @@ def delete_calendar_event(user, google_event_id):
     except Exception as e:
         current_app.logger.error(f"Error deleting calendar event: {str(e)}")
         return False
-
