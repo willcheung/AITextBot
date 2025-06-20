@@ -86,6 +86,7 @@ def callback():
         # Replacing http:// with https:// is important as the external
         # protocol must be https to match the URI whitelisted
         authorization_response=request.url.replace("http://", "https://"),
+        redirect_url=REDIRECT_URL,
         code=code,
     )
     token_response = requests.post(
