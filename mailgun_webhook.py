@@ -249,38 +249,83 @@ def handle_mailgun_webhook():
         # Process text to events using helper function
         formatted_text = f"From: {sender_email}\nSubject: {subject}\n\n{email_text}"
 
-        # Check if sender is an existing user
+        # Check if sender is an existing user (including temp users)
         user = User.query.filter_by(email=sender_email).first()
 
         if user:
-            # Process email for existing user
-            try:
-                result = process_text_to_events(
-                    formatted_text, 
-                    user, 
-                    source_type="email", 
-                    auto_sync=True
-                )
+            # Check if this is a temp user (no google_id) or real user
+            if user.google_id is None:
+                # This is a temp user - add events and send signup email
+                try:
+                    result = process_text_to_events(
+                        formatted_text, 
+                        user, 
+                        source_type="email", 
+                        auto_sync=False  # Don't auto-sync for temp users
+                    )
 
-                events_count = len(result['events'])
-                synced_count = result['synced_count']
+                    events_count = len(result['events'])
 
-                logger.info(f"Processed {events_count} events for existing user {user.id}, synced {synced_count}")
+                    logger.info(f"Added {events_count} events to existing temp user {user.id}")
 
-                # Send confirmation email
-                send_confirmation_email(sender_email, events_count, synced_count)
+                    # Format events data for email
+                    events_data = []
+                    for event in result['events']:
+                        events_data.append({
+                            'event_name': event.event_name,
+                            'event_description': event.event_description,
+                            'start_date': event.start_date.strftime('%Y-%m-%d') if event.start_date else None,
+                            'start_time': event.start_time.strftime('%H:%M') if event.start_time else None,
+                            'end_date': event.end_date.strftime('%Y-%m-%d') if event.end_date else None,
+                            'end_time': event.end_time.strftime('%H:%M') if event.end_time else None,
+                            'location': event.location
+                        })
 
-                return jsonify({
-                    "status": "success",
-                    "user_id": user.id,
-                    "events_extracted": events_count,
-                    "events_synced": synced_count
-                }), 200
+                    # Send signup email with all events (new + existing)
+                    send_signup_email_with_events(sender_email, events_data, subject)
 
-            except Exception as e:
-                logger.error(f"Error processing email for existing user {sender_email}: {str(e)}")
-                sentry_sdk.capture_exception(e)
-                return jsonify({"error": "Failed to process email"}), 500
+                    return jsonify({
+                        "status": "signup_sent",
+                        "email": sender_email,
+                        "temp_user_id": user.id,
+                        "text_input_id": result['text_input'].id,
+                        "events_extracted": events_count,
+                        "events_saved": events_count
+                    }), 200
+
+                except Exception as e:
+                    logger.error(f"Error processing email for temp user {sender_email}: {str(e)}")
+                    sentry_sdk.capture_exception(e)
+                    return jsonify({"error": "Failed to process email"}), 500
+            else:
+                # This is a real user with google_id - process and send confirmation
+                try:
+                    result = process_text_to_events(
+                        formatted_text, 
+                        user, 
+                        source_type="email", 
+                        auto_sync=True
+                    )
+
+                    events_count = len(result['events'])
+                    synced_count = result['synced_count']
+
+                    logger.info(f"Processed {events_count} events for existing user {user.id}, synced {synced_count}")
+
+                    # Send confirmation email
+                    send_confirmation_email(sender_email, events_count, synced_count)
+
+                    return jsonify({
+                        "status": "success",
+                        "user_id": user.id,
+                        "events_extracted": events_count,
+                        "events_synced": synced_count
+                    }), 200
+
+                except Exception as e:
+                    logger.error(f"Error processing email for existing user {sender_email}: {str(e)}")
+                    sentry_sdk.capture_exception(e)
+                    return jsonify({"error": "Failed to process email"}), 500
 
         else:
             # Handle new user - extract events, save to database, and send signup email
