@@ -252,7 +252,7 @@ def handle_mailgun_webhook():
         # Check if sender is an existing user
         user = User.query.filter_by(email=sender_email).first()
 
-        if user and user.google_id:
+        if user:
             # Process email for existing user
             try:
                 result = process_text_to_events(
