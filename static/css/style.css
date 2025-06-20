@@ -98,6 +98,65 @@
     margin-right: 12px;
 }
 
+/* Email forwarding card styles */
+.email-forwarding-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.email-instruction h3 {
+    color: white;
+    font-weight: 600;
+    text-align: center;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.step-number {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.email-address {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-family: 'Source Code Pro', monospace;
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    letter-spacing: 0.5px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.step-description {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
 /* Base styles */
 * {
     box-sizing: border-box;
