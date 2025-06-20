@@ -24,11 +24,17 @@ else:
     # Fallback for local development
     DEV_REDIRECT_URL = 'http://localhost:5000/google_login/callback'
 
+# Determine the correct redirect URL based on the environment
+if os.environ.get("FLASK_ENV") == "production":
+    REDIRECT_URL = os.environ.get("PRODUCTION_REDIRECT_URL", "https://your-production-domain.com/google_login/callback")
+else:
+    REDIRECT_URL = DEV_REDIRECT_URL
+
 # ALWAYS display setup instructions to the user:
 print(f"""To make Google authentication work:
 1. Go to https://console.cloud.google.com/apis/credentials
 2. Create a new OAuth 2.0 Client ID
-3. Add {DEV_REDIRECT_URL} to Authorized redirect URIs
+3. Add {REDIRECT_URL} to Authorized redirect URIs
 4. Enable Google Calendar API in the Google Cloud Console
 
 For detailed instructions, see:
@@ -48,7 +54,7 @@ def login():
     # Store timezone in session for later use during user creation
     timezone = request.args.get('timezone', 'UTC')
     session['user_timezone'] = timezone
-    
+
     # Store email parameter for new user signup flow
     email = request.args.get('email')
     if email:
@@ -58,8 +64,7 @@ def login():
         authorization_endpoint,
         # Replacing http:// with https:// is important as the external
         # protocol must be https to match the URI whitelisted
-        redirect_uri=request.base_url.replace("http://", "https://") +
-        "/callback",
+        redirect_uri=REDIRECT_URL,
         scope=[
             "openid", "email", "profile",
             "https://www.googleapis.com/auth/calendar.app.created"
@@ -81,7 +86,7 @@ def callback():
         # Replacing http:// with https:// is important as the external
         # protocol must be https to match the URI whitelisted
         authorization_response=request.url.replace("http://", "https://"),
-        redirect_url=request.base_url.replace("http://", "https://"),
+        redirect_uri=REDIRECT_URL,
         code=code,
     )
     token_response = requests.post(
@@ -128,13 +133,13 @@ def callback():
     db.session.commit()
 
     login_user(user)
-    
+
     # Check if this is a new signup from email invitation
     signup_email = session.get('signup_email')
     if signup_email and signup_email == users_email:
         # Clear the signup email from session
         session.pop('signup_email', None)
-        
+
         # Check for any pending events that were extracted from their email
         # This could be implemented by storing temporary events in a separate table
         # or by re-processing their recent emails

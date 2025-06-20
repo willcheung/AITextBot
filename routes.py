@@ -11,10 +11,21 @@ import sentry_sdk
 # Import helper modules
 from helpers.event_processing import process_text_to_events
 from helpers.event_utils import prepare_event_data_for_calendar, update_event_from_form, format_event_for_api
+from helpers.domain_utils import get_base_url, get_mailgun_forward_email, is_production, is_development
 
 logger = logging.getLogger(__name__)
 
 main_routes = Blueprint("main_routes", __name__)
+
+@main_routes.app_context_processor
+def inject_domain_utils():
+    """Make domain utility functions available in templates"""
+    return {
+        'get_base_url': get_base_url,
+        'get_mailgun_forward_email': get_mailgun_forward_email,
+        'is_production': is_production,
+        'is_development': is_development
+    }
 
 @main_routes.route("/health")
 def health_check():
