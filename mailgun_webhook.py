@@ -102,7 +102,7 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
 
         <div style="text-align: center; margin-bottom: 30px;">
-            <img src="{base_url}/static/images/logo.svg" alt="Calendar Autobot" style="width: 48px; height: 48px; margin-bottom: 10px;">
+            <img src="{base_url}/static/images/logo.png" alt="Calendar Autobot" style="width: 48px; height: 48px; margin-bottom: 10px;">
             <h1 style="color: #007bff; margin-bottom: 10px;">Calendar Autobot</h1>
             <p style="color: #666; margin: 0;">Transform text into calendar events</p>
         </div>
@@ -166,7 +166,7 @@ def send_confirmation_email(recipient_email, events_count, synced_count):
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
 
             <div style="text-align: center; margin-bottom: 30px;">
-                <img src="{base_url}/static/images/logo.svg" alt="Calendar Autobot" style="width: 48px; height: 48px; margin-bottom: 10px;">
+                <img src="{base_url}/static/images/logo.png" alt="Calendar Autobot" style="width: 48px; height: 48px; margin-bottom: 10px;">
                 <h1 style="color: #007bff; margin-bottom: 10px;">Calendar Autobot</h1>
             </div>
 
