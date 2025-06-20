@@ -199,7 +199,7 @@ def send_confirmation_email(recipient_email, events_count, synced_count):
             data={
                 "from": f"Calendar Autobot <noreply@{MAILGUN_DOMAIN}>",
                 "to": recipient_email,
-                "subject": f"✅ {events_count} Event(s) Processed Successfully",
+                "subject": f"{events_count} Event(s) Processed Successfully",
                 "html": html_content,
                 "o:tag": ["confirmation", "existing_user"]
             }
