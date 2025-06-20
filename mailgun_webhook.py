@@ -11,6 +11,7 @@ import requests
 from models import User, Event
 from helpers.event_processing import process_text_to_events
 from helpers.event_utils import format_event_for_api
+from helpers.domain_utils import get_base_url
 from app import db
 import sentry_sdk
 
@@ -70,9 +71,7 @@ def send_signup_email_with_events(recipient_email, events_data, original_subject
 
 def generate_signup_email_html(events_data, recipient_email, original_subject):
     """Generate HTML email content with extracted events"""
-    base_url = os.environ.get("REPLIT_DEV_DOMAIN", "localhost:5000")
-    if base_url and not base_url.startswith("http"):
-        base_url = f"https://{base_url}"
+    base_url = get_base_url()
 
     signup_url = f"{base_url}/google_login?email={recipient_email}"
 
@@ -152,9 +151,7 @@ def generate_signup_email_html(events_data, recipient_email, original_subject):
 def send_confirmation_email(recipient_email, events_count, synced_count):
     """Send confirmation email to existing user after processing"""
     try:
-        base_url = os.environ.get("REPLIT_DEV_DOMAIN", "localhost:5000")
-        if base_url and not base_url.startswith("http"):
-            base_url = f"https://{base_url}"
+        base_url = get_base_url()
 
         dashboard_url = f"{base_url}/dashboard"
 
