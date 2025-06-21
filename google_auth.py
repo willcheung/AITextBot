@@ -16,25 +16,14 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET",
                                       "your-google-client-secret")
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
-# Make sure to use this redirect URL. It has to match the one in the whitelist
-replit_domain = os.environ.get("REPLIT_DEV_DOMAIN")
-if replit_domain:
-    DEV_REDIRECT_URL = f'https://{replit_domain}/google_login/callback'
-else:
-    # Fallback for local development
-    DEV_REDIRECT_URL = 'http://localhost:5000/google_login/callback'
-
-# Determine the correct redirect URL based on the environment
-if os.environ.get("FLASK_ENV") == "production":
-    REDIRECT_URL = os.environ.get("PRODUCTION_REDIRECT_URL", "https://calautobot.com/google_login/callback")
-else:
-    REDIRECT_URL = DEV_REDIRECT_URL
+# Use relative redirect URL - Flask will handle the domain automatically
+REDIRECT_URL = "/google_login/callback"
 
 # ALWAYS display setup instructions to the user:
 print(f"""To make Google authentication work:
 1. Go to https://console.cloud.google.com/apis/credentials
 2. Create a new OAuth 2.0 Client ID
-3. Add {REDIRECT_URL} to Authorized redirect URIs
+3. Add your domain + /google_login/callback to Authorized redirect URIs
 4. Enable Google Calendar API in the Google Cloud Console
 
 For detailed instructions, see:
@@ -62,9 +51,7 @@ def login():
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        # Replacing http:// with https:// is important as the external
-        # protocol must be https to match the URI whitelisted
-        redirect_uri=REDIRECT_URL,
+        redirect_uri=request.url_root.rstrip('/') + REDIRECT_URL,
         scope=[
             "openid", "email", "profile",
             "https://www.googleapis.com/auth/calendar.app.created"
@@ -83,10 +70,8 @@ def callback():
 
     token_url, headers, body = client.prepare_token_request(
         token_endpoint,
-        # Replacing http:// with https:// is important as the external
-        # protocol must be https to match the URI whitelisted
-        authorization_response=request.url.replace("http://", "https://"),
-        redirect_url=REDIRECT_URL,
+        authorization_response=request.url,
+        redirect_url=request.url_root.rstrip('/') + REDIRECT_URL,
         code=code,
     )
     token_response = requests.post(
