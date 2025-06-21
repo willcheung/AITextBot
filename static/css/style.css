@@ -152,7 +152,7 @@
 /* Mobile email address sizing */
 @media (max-width: 768px) {
     .email-address-large {
-        font-size: 1.25rem;
+        font-size: 1rem;
         padding: 0.75rem 1rem;
         letter-spacing: 0.5px;
         word-break: break-all;
