@@ -75,10 +75,7 @@ def is_production():
     # Fallback: Check environment variables (not domain variables)
     return (
         os.environ.get("FLASK_ENV") == "production" or
-        os.environ.get("ENVIRONMENT") == "production" or
-        os.environ.get("FLASK_DEBUG", "").lower() in ["false", "0", ""] or
-        # Check if we're running under Gunicorn (typical production setup)
-        os.environ.get("SERVER_SOFTWARE", "").startswith("gunicorn")
+        os.environ.get("ENVIRONMENT") == "production"
     )
 
 def is_development():
