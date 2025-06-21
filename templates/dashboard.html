@@ -124,7 +124,13 @@
                             
                             <div class="event-details">
                                 {% if event.event_description %}
-                                    <p class="event-description">{{ event.event_description }}</p>
+                                    <div class="event-description">
+                                        {% for line in event.event_description.split('\n') %}
+                                            {% if line.strip() %}
+                                                <p>{{ line.strip() }}</p>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
                                 {% endif %}
                                 
                                 <div class="event-meta">

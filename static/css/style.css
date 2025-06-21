@@ -474,7 +474,15 @@ code, pre {
 .event-description {
     color: var(--text-muted);
     margin-bottom: 1rem;
-    font-style: italic;
+}
+
+.event-description p {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.event-description p:last-child {
+    margin-bottom: 0;
 }
 
 .event-meta {
