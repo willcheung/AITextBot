@@ -7,7 +7,7 @@ import requests
 from app import db
 from flask import Blueprint, redirect, request, url_for, session
 from flask_login import login_required, login_user, logout_user
-from models import User
+from models import User, Event
 from oauthlib.oauth2 import WebApplicationClient
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID",
@@ -99,8 +99,16 @@ def callback():
         user.timezone = user_timezone
         db.session.add(user)
     else:
-        # Update existing user's timezone
+        # Check if this is a temp user (no google_id) converting to real user
+        is_temp_user_signup = (user.google_id is None)
+        
+        # Update existing user's fields
         user.timezone = user_timezone
+        
+        if is_temp_user_signup:
+            # Update temp user to real user
+            user.google_id = google_id
+            user.username = users_name  # Replace temp username with real name
 
     # Update the Google token for Calendar API access
     user.google_token = json.dumps(token_data)
@@ -126,6 +134,47 @@ def callback():
         # This could be implemented by storing temporary events in a separate table
         # or by re-processing their recent emails
         logger.info(f"New user {users_email} signed up after email invitation")
+
+    # Auto-sync events for temp users who just signed up
+    if 'is_temp_user_signup' in locals() and is_temp_user_signup:
+        try:
+            from google_calendar import get_or_create_textbot_calendar, create_calendar_event
+            from helpers.event_utils import prepare_event_data_for_calendar
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            logger.info(f"Temp user {users_email} signed up, auto-syncing existing events")
+            
+            # Get user's unsynced events
+            unsynced_events = user.events.filter_by(is_synced=False).all()
+            
+            if unsynced_events:
+                # Get access token and create calendar
+                access_token = json.loads(user.google_token)['access_token']
+                calendar_id = get_or_create_textbot_calendar(user, access_token)
+                
+                synced_count = 0
+                for event in unsynced_events:
+                    try:
+                        event_data = prepare_event_data_for_calendar(event)
+                        google_event_id = create_calendar_event(user, event_data)
+                        
+                        if google_event_id:
+                            event.google_event_id = google_event_id
+                            event.is_synced = True
+                            synced_count += 1
+                            logger.info(f"Auto-synced event '{event.event_name}' for new user")
+                    
+                    except Exception as sync_error:
+                        logger.warning(f"Failed to sync event '{event.event_name}': {str(sync_error)}")
+                
+                # Commit the sync updates
+                db.session.commit()
+                logger.info(f"Auto-synced {synced_count}/{len(unsynced_events)} events for new user {users_email}")
+        
+        except Exception as e:
+            logger.error(f"Error auto-syncing events for new user {users_email}: {str(e)}")
+            # Don't fail the signup process if sync fails
 
     return redirect(url_for("main_routes.dashboard"))
 
