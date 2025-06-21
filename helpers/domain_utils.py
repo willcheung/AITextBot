@@ -18,7 +18,7 @@ def get_base_domain():
         else:
             logger.warning("Production environment detected but no PRODUCTION_DOMAIN set")
     
-    if is_development():
+    else:
         # Check if we're in Replit development environment
         replit_dev_domain = os.environ.get("REPLIT_DEV_DOMAIN")
         if replit_dev_domain:
@@ -60,11 +60,7 @@ def is_production():
     Uses Flask config and environment variables, not domain settings.
     """
     try:
-        # Method 1: Check Flask debug mode (production should have debug=False)
-        if hasattr(current_app, 'debug') and not current_app.debug:
-            return True
-
-        # Method 2: Check Flask config ENV
+        # Check Flask config ENV
         if hasattr(current_app, 'config') and current_app.config.get('ENV') == 'production':
             return True
 

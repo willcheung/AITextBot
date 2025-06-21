@@ -19,17 +19,6 @@ GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configura
 # Use relative redirect URL - Flask will handle the domain automatically
 REDIRECT_URL = "/google_login/callback"
 
-# ALWAYS display setup instructions to the user:
-print(f"""To make Google authentication work:
-1. Go to https://console.cloud.google.com/apis/credentials
-2. Create a new OAuth 2.0 Client ID
-3. Add your domain + /google_login/callback to Authorized redirect URIs
-4. Enable Google Calendar API in the Google Cloud Console
-
-For detailed instructions, see:
-https://docs.replit.com/additional-resources/google-auth-in-flask#set-up-your-oauth-app--client
-""")
-
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 google_auth = Blueprint("google_auth", __name__)
