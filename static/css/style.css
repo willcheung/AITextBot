@@ -149,6 +149,16 @@
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Mobile email address sizing */
+@media (max-width: 768px) {
+    .email-address-large {
+        font-size: 1.25rem;
+        padding: 0.75rem 1rem;
+        letter-spacing: 0.5px;
+        word-break: break-all;
+    }
+}
+
 .email-instruction h3 {
     color: white;
     font-weight: 600;
@@ -420,6 +430,22 @@ code, pre {
     border-radius: 50%;
     width: 40px;
     height: 40px;
+}
+
+/* Mobile carousel controls */
+@media (max-width: 768px) {
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 15%;
+        opacity: 0.8;
+    }
+    
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        width: 32px;
+        height: 32px;
+        background-size: 16px;
+    }
 }
 
 /* Cards */
