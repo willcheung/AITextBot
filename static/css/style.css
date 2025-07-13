@@ -407,6 +407,67 @@ code, pre {
     min-height: 500px;
 }
 
+/* FAQ section */
+.faq-section {
+    padding: 4rem 0;
+    background-color: #f8f9fa;
+}
+
+.accordion {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.accordion-item {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.accordion-item:last-child {
+    border-bottom: none;
+}
+
+.accordion-button {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    font-weight: 500;
+    padding: 1.5rem;
+    border: none;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: none;
+}
+
+.accordion-button:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(63, 81, 181, 0.25);
+}
+
+.accordion-button::after {
+    transition: transform 0.3s ease;
+}
+
+.accordion-body {
+    padding: 1.5rem;
+    background-color: var(--card-background);
+    line-height: 1.6;
+}
+
+.accordion-body a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.accordion-body a:hover {
+    text-decoration: underline;
+}
+
 .example-text {
     background: #f8f9fa;
     border: 1px solid var(--border-color);
