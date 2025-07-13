@@ -54,6 +54,13 @@
         </div>
     </div>
 
+    <!-- Note below CTA -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <p class="text-center text-muted mb-0" style="font-size: 0.9rem;"><strong>Note:</strong> We will create "Cal Autobot" calendar so it doesn't get mingled up with your other events.</p>
+        </div>
+    </div>
+
     <!-- Text Input Section -->
     <div class="row mb-5">
         <div class="col-12">
@@ -62,7 +69,7 @@
                     <i data-feather="edit-3" class="me-2"></i>
                     Or Extract Events from Text
                 </h3>
-                
+
                 <form method="POST" action="{{ url_for('main_routes.extract_events') }}">
                     <div class="mb-3">
                         <label for="text" class="form-label">Paste your email, document, or any text with event information:</label>
@@ -72,7 +79,7 @@
                                   rows="8" 
                                   placeholder="Example:&#10;&#10;Subject: Team Meeting Tomorrow&#10;From: manager@company.com&#10;&#10;Hi team, we have our weekly meeting tomorrow at 2 PM in Conference Room A..."></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-accent btn-lg">
                         <i data-feather="cpu" class="me-2"></i>
                         Extract Events
@@ -89,7 +96,7 @@
                 <h2>Your Events</h2>
                 <span class="badge bg-primary">{{ events|length }} event(s)</span>
             </div>
-            
+
             {% if events %}
                 <div class="events-container">
                     {% for event in events %}
@@ -106,13 +113,13 @@
                                         <span class="badge bg-secondary ms-2">Not Synced</span>
                                     {% endif %}
                                 </div>
-                                
+
                                 <div class="event-actions">
                                     <a href="{{ url_for('main_routes.edit_event', event_id=event.id) }}" 
                                        class="btn btn-sm btn-outline-primary">
                                         <i data-feather="edit-2"></i>
                                     </a>
-                                    
+
                                     {% if not event.is_synced %}
                                         {% if has_calendar_scope %}
                                             <form method="POST" action="{{ url_for('main_routes.sync_to_calendar', event_id=event.id) }}" class="d-inline">
@@ -126,7 +133,7 @@
                                             </button>
                                         {% endif %}
                                     {% endif %}
-                                    
+
                                     <form method="POST" action="{{ url_for('main_routes.delete_event', event_id=event.id) }}" 
                                           class="d-inline delete-form">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete event">
@@ -135,7 +142,7 @@
                                     </form>
                                 </div>
                             </div>
-                            
+
                             <div class="event-details">
                                 {% if event.event_description %}
                                     <div class="event-description">
@@ -146,7 +153,7 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
-                                
+
                                 <div class="event-meta">
                                     <div class="meta-item">
                                         <i data-feather="calendar" class="me-1"></i>
@@ -155,7 +162,7 @@
                                             - {{ event.end_date.strftime('%B %d, %Y') }}
                                         {% endif %}
                                     </div>
-                                    
+
                                     {% if event.start_time %}
                                         <div class="meta-item">
                                             <i data-feather="clock" class="me-1"></i>
@@ -165,7 +172,7 @@
                                             {% endif %}
                                         </div>
                                     {% endif %}
-                                    
+
                                     {% if event.location %}
                                         <div class="meta-item">
                                             <i data-feather="map-pin" class="me-1"></i>
