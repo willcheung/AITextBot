@@ -129,6 +129,8 @@
     border-radius: 15px;
     padding: 2rem;
     color: white;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .email-label {
