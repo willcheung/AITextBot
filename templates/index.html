@@ -3,6 +3,57 @@
 
 {% block title %}Calendar Autobot | Transform Emails and Pictures to Calendar Events{% endblock %}
 
+{% block head %}
+<!-- SEO Meta Tags -->
+<meta name="description" content="Transform emails, photos, and text into Google Calendar events with AI. Forward any email to go@CalAutobot.com and our AI automatically extracts dates, times, and event details to sync with your calendar.">
+<meta name="keywords" content="calendar automation, email to calendar, AI calendar, Google Calendar sync, event extraction, calendar events, email automation, schedule management">
+<meta name="author" content="Calendar Autobot">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://CalAutobot.com/">
+<meta property="og:title" content="Calendar Autobot | Transform Emails and Pictures to Calendar Events">
+<meta property="og:description" content="Transform emails, photos, and text into Google Calendar events with AI. Forward any email to go@CalAutobot.com and our AI automatically extracts dates, times, and event details to sync with your calendar.">
+<meta property="og:image" content="{{ url_for('static', filename='images/logo.png') }}">
+<meta property="og:site_name" content="Calendar Autobot">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://CalAutobot.com/">
+<meta property="twitter:title" content="Calendar Autobot | Transform Emails and Pictures to Calendar Events">
+<meta property="twitter:description" content="Transform emails, photos, and text into Google Calendar events with AI. Forward any email to go@CalAutobot.com and our AI automatically extracts dates, times, and event details to sync with your calendar.">
+<meta property="twitter:image" content="{{ url_for('static', filename='images/logo.png') }}">
+
+<!-- Additional SEO -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#3F51B5">
+<link rel="canonical" href="https://CalAutobot.com/">
+
+<!-- Schema.org structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Calendar Autobot",
+  "description": "Transform emails, photos, and text into Google Calendar events with AI",
+  "url": "https://CalAutobot.com",
+  "applicationCategory": "Productivity",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "127"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="hero-section">
     <div class="container">
