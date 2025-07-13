@@ -34,7 +34,6 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1>Welcome, {{ current_user.username }}!</h1>
-                    <p class="text-muted">Extract events from text and sync to your Google Calendar</p>
                 </div>
             </div>
         </div>
@@ -45,8 +44,7 @@
         <div class="col-12">
             <div class="email-cta">
                 <div class="email-forward-instruction text-center">
-                    <h4 class="mb-3">Fastest Way to Get Started</h4>
-                    <span class="email-label">Forward any email to:</span>
+                    <span class="email-label">Get started by forwarding any email to:</span>
                     <div class="email-address-large">
                         go@CalAutobot.com
                         <button type="button" class="btn btn-sm btn-light ms-2" onclick="copyEmail()" title="Copy email address">
@@ -62,7 +60,7 @@
     <!-- Note below CTA -->
     <div class="row mb-4">
         <div class="col-12">
-            <p class="text-center text-muted mb-0" style="font-size: 0.9rem;"><strong>💡 Note:</strong> We will create "Cal Autobot" calendar so it doesn't get mingled up with your other events.</p>
+            <p class="text-center text-muted mb-0" style="font-size: 0.9rem;"><span style="font-size: 1.2rem">💡</span><strong>Note:</strong> We will create "Cal Autobot" calendar so it doesn't get mingled up with your other calendar events.</p>
         </div>
     </div>
 
@@ -87,7 +85,7 @@
 
                     <button type="submit" class="btn btn-accent btn-lg">
                         <i data-feather="cpu" class="me-2"></i>
-                        Extract Events
+                        Extract Events and Sync
                     </button>
                 </form>
             </div>
