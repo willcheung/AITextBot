@@ -297,6 +297,30 @@ window.startGoogleLogin = function() {
     }
 }
 
+// Function to copy email address
+window.copyEmail = function() {
+    const email = 'go@CalAutobot.com';
+    navigator.clipboard.writeText(email).then(() => {
+        showToast('Email copied to clipboard!', 'success');
+        
+        // Temporarily change the copy icon to a check mark
+        const copyIcon = document.querySelector('.copy-icon');
+        if (copyIcon) {
+            const originalIcon = copyIcon.getAttribute('data-feather');
+            copyIcon.setAttribute('data-feather', 'check');
+            feather.replace();
+            
+            // Revert back to copy icon after 2 seconds
+            setTimeout(() => {
+                copyIcon.setAttribute('data-feather', 'copy');
+                feather.replace();
+            }, 2000);
+        }
+    }).catch(() => {
+        showToast('Failed to copy email to clipboard', 'error');
+    });
+}
+
 // Initialize tooltips (if Bootstrap tooltips are needed in the future)
 function initializeTooltips() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
