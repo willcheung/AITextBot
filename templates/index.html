@@ -10,7 +10,7 @@
             <div class="col-lg-8 text-center">
                 <h1 class="hero-title">Transform Emails and Photos to Google Calendar Events</h1>
                 <p class="hero-subtitle">
-                    No more manual entry! Sign up with Google and paste your confirmations, invites, or screenshots - our AI finds the date and adds it to your Google Calendar. 
+                    No more manual entry! Sign up with Google and forward your email confirmations, invites, or screenshots - our AI finds the date and adds it to your Google Calendar. 
                 </p>
                 
                 {% if not current_user.is_authenticated %}
@@ -53,7 +53,7 @@
                         <i data-feather="user-plus"></i>
                     </div>
                     <h4>Sign Up with Google</h4>
-                    <p>Connect your Google account to get started. Paste emails, documents, or any pictures containing event information directly in the app.</p>
+                    <p>Connect your Google account to get started. Forward emails, documents, or any pictures containing event information directly in the app.</p>
                 </div>
             </div>
             
@@ -272,7 +272,7 @@ Confirmation Number: HTL789456<br><br>
                         </h2>
                         <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Yes, your privacy is our priority. We only access the Google Calendar permissions you grant us, and we use secure encryption for all data transmission. Your text input is processed by AI but not permanently stored. Read our <a href="{{ url_for('main_routes.privacy') }}">Privacy Policy</a> for full details.
+                                Yes, your privacy is our priority. We cannot access your main Google Calendar events and create a new "Cal Autobot" calendar. We use secure encryption for all data transmission. Your text input is processed by AI but not permanently stored. Read our <a href="{{ url_for('main_routes.privacy') }}">Privacy Policy</a> for full details.
                             </div>
                         </div>
                     </div>
@@ -324,7 +324,7 @@ Confirmation Number: HTL789456<br><br>
                         </h2>
                         <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                             <div class="accordion-body">
-                                Our AI is highly accurate, but you always have the opportunity to review and edit extracted events before they're added to your calendar. If extraction doesn't work as expected, you can manually adjust the details or try rephrasing your input text.
+                                Our AI is highly accurate, but you always have the opportunity to review and edit extracted events before they're added to your calendar. If extraction doesn't work as expected, you can manually adjust the details. Send us an email to <a href="mailto:support@gettextbot.com">support@getTextBot.com</a> with any issues.
                             </div>
                         </div>
                     </div>
